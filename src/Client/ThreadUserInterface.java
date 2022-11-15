@@ -11,9 +11,9 @@ public class ThreadUserInterface extends Thread{
     public void run(){
         switch(InputUtils.chooseOption("What do you pretend to do?",
                 "Signup",
-                "Logic")){
+                "Login")){
             case 1 -> { while(!Client.registerUser(
-                    InputUtils.readString("Nome", false),
+                    InputUtils.readString("Name", false),
                     InputUtils.readString("Username", false),
                     InputUtils.readString("Password", true)
             )); }
