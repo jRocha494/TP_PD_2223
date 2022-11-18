@@ -1,5 +1,7 @@
 package Server.jdbc;
 
+import Models.User;
+
 import java.sql.*;
 import java.util.Scanner;
 
@@ -17,6 +19,22 @@ public class ConnDB
     {
         if (dbConn != null)
             dbConn.close();
+    }
+
+    public void initializeDatabase() throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT id, nome FROM utilizador WHERE nome = 'admin'";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        if(!resultSet.isBeforeFirst())
+        {
+            createAdmin();
+        }
+
+        resultSet.close();
+        statement.close();
     }
 
     public void listUsers(String whereName) throws SQLException
@@ -88,21 +106,34 @@ public class ConnDB
         statement.close();
     }
 
-    public void authenticateUser(String username, String password) throws SQLException {
-        Statement statement = dbConn.createStatement();
+    public User authenticateUser(String username, String password) throws SQLException {
+        String sqlQuery = "SELECT * FROM utilizador " +
+                "WHERE username = '" + username +
+                "' AND password = '" + password + "'";
 
-        String sqlQuery = "SELECT id, nome, username, password, autenticado, administrador FROM utilizador " +
-                "WHERE username = '" + username + "' AND password = '" + password + "'";
+        try(
+            Statement statement = dbConn.createStatement();
+        ) {
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+            User user = null;
 
-        ResultSet resultSet = statement.executeQuery(sqlQuery);
+            if (resultSet.isBeforeFirst() && resultSet.getInt("autenticado") == 0) {
+                user = new User(
+                        resultSet.getInt("id"),
+                        resultSet.getString("username"),
+                        resultSet.getString("nome"),
+                        resultSet.getString("password"),
+                        resultSet.getInt("administrador"),
+                        resultSet.getInt("autenticado"));
+                sqlQuery = "UPDATE utilizador SET autenticado = 1 WHERE id = " + user.getId();
+                statement.executeUpdate(sqlQuery);
+                System.out.println(user.getUsername() + " has logged in");
+            }
 
-        if(resultSet.isBeforeFirst() && resultSet.getInt("autenticado") == 0 && resultSet.getInt("administrador") == 0){
-            sqlQuery = "UPDATE utilizador SET autenticado = 1 WHERE id = " + resultSet.getInt("id");
-            statement.executeUpdate(sqlQuery);
-            System.out.println(resultSet.getInt("username") + " has logged in");
+            return user;
+        }catch (SQLException e){
+            throw e;
         }
-
-        statement.close();
     }
 
     public void readAuthenticatedUsers() throws SQLException {
@@ -122,6 +153,14 @@ public class ConnDB
         }
 
         resultSet.close();
+        statement.close();
+    }
+
+    private void createAdmin() throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "INSERT INTO utilizador (username, nome, password, administrador) VALUES ('admin','admin','admin', 1)";
+        statement.executeUpdate(sqlQuery);
         statement.close();
     }
 }

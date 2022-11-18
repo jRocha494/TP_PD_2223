@@ -17,12 +17,13 @@ public class Client {
     }
 
     public static boolean registerUser(String name, String username, String password){
-        User user = new User(name, username, password);
+        User user = new User(username, name, password);
         return server.registerUser(user);
     }
 
     public static boolean authenticateUser(String username, String password){
         User user = new User(username, password);
-        return server.authenticateUser(user);
+        server.authenticateUser(user);
+        return true;
     }
 }
