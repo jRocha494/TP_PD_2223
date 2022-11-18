@@ -22,4 +22,10 @@ public class Client {
         User user = new User(name, username, password);
         server.registerUser(user);
     }
+
+    public static boolean authenticateUser(String username, String password){
+        User user = new User(username, password);
+        server.authenticateUser(user);
+        return true;
+    }
 }

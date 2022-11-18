@@ -15,8 +15,8 @@ public class ThreadUserInterface extends Thread{
             switch (InputUtils.chooseOption("What do you pretend to do?",
                     "Signup",
                     "Login",
-                    "Exit")) {
                 case 1 -> {
+                    "Exit")) {
                     try {
                         Client.registerUser(
                                     InputUtils.readString("Name: ", false),
@@ -27,6 +27,10 @@ public class ThreadUserInterface extends Thread{
                         InputUtils.logException(e.getMessage(), e.getCause());
                     }
                 }
+            case 2 -> { while(!Client.authenticateUser(
+                    InputUtils.readString("Username", false),
+                    InputUtils.readString("Password", true)
+            )); }
                 case 3 -> exit = true;
             }
         } while(!exit);
