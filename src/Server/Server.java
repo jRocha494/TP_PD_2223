@@ -5,6 +5,7 @@ import Server.jdbc.ConnDB;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public class Server {
     private ConnDB connDB;
@@ -20,6 +21,22 @@ public class Server {
         try {
             connDB.createUser(user.getName(), user.getUsername(), user.getPassword());
             connDB.readUser();
+        } catch (SQLException e) {
+            return false;
+//            throw new RuntimeException(e);
+        }
+        try {
+            connDB.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+
+    public boolean authenticateUser(User userData){
+        try {
+            connDB.authenticateUser(userData.getUsername(), userData.getPassword());
+            connDB.readAuthenticatedUsers();
         } catch (SQLException e) {
             return false;
 //            throw new RuntimeException(e);

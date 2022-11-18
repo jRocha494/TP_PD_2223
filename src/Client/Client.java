@@ -20,4 +20,9 @@ public class Client {
         User user = new User(name, username, password);
         return server.registerUser(user);
     }
+
+    public static boolean authenticateUser(String username, String password){
+        User user = new User(username, password);
+        return server.authenticateUser(user);
+    }
 }

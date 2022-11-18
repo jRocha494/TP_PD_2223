@@ -17,6 +17,10 @@ public class ThreadUserInterface extends Thread{
                     InputUtils.readString("Username", false),
                     InputUtils.readString("Password", true)
             )); }
+            case 2 -> { while(!Client.authenticateUser(
+                    InputUtils.readString("Username", false),
+                    InputUtils.readString("Password", true)
+            )); }
         }
     }
 }

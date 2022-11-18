@@ -87,4 +87,41 @@ public class ConnDB
         resultSet.close();
         statement.close();
     }
+
+    public void authenticateUser(String username, String password) throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT id, nome, username, password, autenticado, administrador FROM utilizador " +
+                "WHERE username = '" + username + "' AND password = '" + password + "'";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        if(resultSet.isBeforeFirst() && resultSet.getInt("autenticado") == 0 && resultSet.getInt("administrador") == 0){
+            sqlQuery = "UPDATE utilizador SET autenticado = 1 WHERE id = " + resultSet.getInt("id");
+            statement.executeUpdate(sqlQuery);
+            System.out.println(resultSet.getInt("username") + " has logged in");
+        }
+
+        statement.close();
+    }
+
+    public void readAuthenticatedUsers() throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT id, nome, username, password FROM utilizador WHERE autenticado = 1";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            int id = resultSet.getInt("id");
+            String name = resultSet.getString("nome");
+            String username = resultSet.getString("username");
+            String password = resultSet.getString("password");
+            System.out.println("[" + id + "] " + name + " (" + username + ")" + password);
+        }
+
+        resultSet.close();
+        statement.close();
+    }
 }
