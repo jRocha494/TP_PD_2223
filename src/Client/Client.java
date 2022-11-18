@@ -1,8 +1,10 @@
 package Client;
 
+import Models.CustomException;
 import Models.User;
 import Server.Server;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class Client {
@@ -16,8 +18,8 @@ public class Client {
         threadList.add(tcl);
     }
 
-    public static boolean registerUser(String name, String username, String password){
+    public static void registerUser(String name, String username, String password) throws CustomException {
         User user = new User(name, username, password);
-        return server.registerUser(user);
+        server.registerUser(user);
     }
 }

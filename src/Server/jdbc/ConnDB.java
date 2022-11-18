@@ -63,7 +63,7 @@ public class ConnDB
     public void createUser(String name, String username, String password) throws SQLException {
         Statement statement = dbConn.createStatement();
 
-        String sqlQuery = "INSERT INTO utilizador (username, nome, password) VALUES ('" + username + "','" + name + "','" + password + "')";
+        String sqlQuery = "INSERT INTO utilizador (usernameasd, nome, password) VALUES ('" + username + "','" + name + "','" + password + "')";
         statement.executeUpdate(sqlQuery);
         statement.close();
     }

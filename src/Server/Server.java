@@ -1,5 +1,6 @@
 package Server;
 
+import Models.CustomException;
 import Models.User;
 import Server.jdbc.ConnDB;
 
@@ -16,19 +17,18 @@ public class Server {
         }
     }
 
-    public boolean registerUser(User user){
+    public void registerUser(User user) throws CustomException {
         try {
             connDB.createUser(user.getName(), user.getUsername(), user.getPassword());
-            connDB.readUser();
         } catch (SQLException e) {
-            return false;
-//            throw new RuntimeException(e);
+            throw new CustomException("Error registering user", e);
         }
-        try {
-            connDB.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        finally {
+            try {
+                connDB.close();
+            } catch (SQLException e) {
+                throw new CustomException("Error closing dependencies", e);
+            }
         }
-        return true;
     }
 }

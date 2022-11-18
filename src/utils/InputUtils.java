@@ -78,4 +78,8 @@ public final class InputUtils {
         return option;
     }
 
+    public static void logException(String s, Throwable e){
+        System.out.println("[ERROR] " + s + " -> " + e);
+    }
+
 }

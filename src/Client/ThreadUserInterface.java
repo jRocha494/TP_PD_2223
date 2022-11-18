@@ -1,5 +1,6 @@
 package Client;
 
+import Models.CustomException;
 import utils.InputUtils;
 
 public class ThreadUserInterface extends Thread{
@@ -9,14 +10,25 @@ public class ThreadUserInterface extends Thread{
 
     @Override
     public void run(){
-        switch(InputUtils.chooseOption("What do you pretend to do?",
-                "Signup",
-                "Login")){
-            case 1 -> { while(!Client.registerUser(
-                    InputUtils.readString("Name", false),
-                    InputUtils.readString("Username", false),
-                    InputUtils.readString("Password", true)
-            )); }
-        }
+        boolean exit = false;
+        do{
+            switch (InputUtils.chooseOption("What do you pretend to do?",
+                    "Signup",
+                    "Login",
+                    "Exit")) {
+                case 1 -> {
+                    try {
+                        Client.registerUser(
+                                    InputUtils.readString("Name: ", false),
+                                    InputUtils.readString("Username: ", false),
+                                    InputUtils.readString("Password: ", true)
+                        );
+                    } catch (CustomException e) {
+                        InputUtils.logException(e.getMessage(), e.getCause());
+                    }
+                }
+                case 3 -> exit = true;
+            }
+        } while(!exit);
     }
 }
