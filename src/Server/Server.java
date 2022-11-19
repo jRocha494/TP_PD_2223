@@ -1,10 +1,10 @@
 package Server;
 
-import Models.CustomException;
+import utils.errorHandling.CustomException;
 import Models.User;
 import Server.jdbc.ConnDB;
+import utils.errorHandling.Errors;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.HashMap;
 
@@ -25,27 +25,21 @@ public class Server {
         } catch (SQLException e) {
             throw new CustomException("Error registering user", e);
         }
-        finally {
-            try {
-                connDB.close();
-            } catch (SQLException e) {
-                throw new CustomException("Error closing dependencies", e);
-            }
+    }
+
+    public User authenticateUser(User user) throws CustomException {
+        try {
+            return connDB.authenticateUser(user.getUsername(), user.getPassword());
+        } catch (SQLException e) {
+            throw new CustomException("Error authenticating user", e);
         }
     }
 
-    public void authenticateUser(User user){
+    public void editLoginData(int id, HashMap<String, String> editLoginMap) throws CustomException {
         try {
-            user = connDB.authenticateUser(user.getUsername(), user.getPassword());
-            connDB.readAuthenticatedUsers();
+            connDB.updateUser(id, editLoginMap);
         } catch (SQLException e) {
-//            throw new RuntimeException(e);
-        }finally {
-            try {
-                connDB.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            throw new CustomException("Error editing user's data", e);
         }
     }
 }

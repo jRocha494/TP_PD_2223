@@ -3,7 +3,8 @@ package Server.jdbc;
 import Models.User;
 
 import java.sql.*;
-import java.util.Scanner;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConnDB
 {
@@ -37,34 +38,19 @@ public class ConnDB
         statement.close();
     }
 
-    public void listUsers(String whereName) throws SQLException
+    public void updateUser(int id, HashMap<String, String> updateUserMap) throws SQLException
     {
         Statement statement = dbConn.createStatement();
-
-        String sqlQuery = "SELECT id, name, birthdate FROM users";
-        if (whereName != null)
-            sqlQuery += " WHERE name like '%" + whereName + "%'";
-
-        ResultSet resultSet = statement.executeQuery(sqlQuery);
-
-        while(resultSet.next())
-        {
-            int id = resultSet.getInt("id");
-            String name = resultSet.getString("name");
-            Date birthdate = resultSet.getDate("birthdate");
-            System.out.println("[" + id + "] " + name + " (" + birthdate + ")");
+        
+        String sqlQuery = "UPDATE utilizador SET ";
+        int index=0;
+        for (Map.Entry<String, String> entry : updateUserMap.entrySet()) {
+            sqlQuery += entry.getKey() + "='" + entry.getValue();
+            if (++index < updateUserMap.size())
+                sqlQuery += "', ";
         }
+        sqlQuery += "' WHERE id=" + id;
 
-        resultSet.close();
-        statement.close();
-    }
-
-    public void updateUser(int id, String name, String birthdate) throws SQLException
-    {
-        Statement statement = dbConn.createStatement();
-
-        String sqlQuery = "UPDATE users SET name='" + name + "', " +
-                            "BIRTHDATE='" + birthdate + "' WHERE id=" + id;
         statement.executeUpdate(sqlQuery);
         statement.close();
     }
@@ -81,7 +67,7 @@ public class ConnDB
     public void createUser(String name, String username, String password) throws SQLException {
         Statement statement = dbConn.createStatement();
 
-        String sqlQuery = "INSERT INTO utilizador (usernameasd, nome, password) VALUES ('" + username + "','" + name + "','" + password + "')";
+        String sqlQuery = "INSERT INTO utilizador (username, nome, password) VALUES ('" + username + "','" + name + "','" + password + "')";
         statement.executeUpdate(sqlQuery);
         statement.close();
     }
@@ -109,15 +95,14 @@ public class ConnDB
     public User authenticateUser(String username, String password) throws SQLException {
         String sqlQuery = "SELECT * FROM utilizador " +
                 "WHERE username = '" + username +
-                "' AND password = '" + password + "'";
+                "' AND password = '" + password + "';";
 
         try(
             Statement statement = dbConn.createStatement();
         ) {
             ResultSet resultSet = statement.executeQuery(sqlQuery);
             User user = null;
-
-            if (resultSet.isBeforeFirst() && resultSet.getInt("autenticado") == 0) {
+            while(resultSet.next()) {
                 user = new User(
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
@@ -131,7 +116,10 @@ public class ConnDB
             }
 
             return user;
+            //TODO: see if errors are caught by a try catch block
+//            throw new Error()
         }catch (SQLException e){
+            e.printStackTrace();
             throw e;
         }
     }

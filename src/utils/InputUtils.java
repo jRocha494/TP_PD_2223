@@ -15,7 +15,7 @@ public final class InputUtils {
         sc = new Scanner(System.in);
     }
 
-    public static String readString(String title,boolean onlyOneWord) {
+    public static String readString(String title,boolean onlyOneWord,boolean acceptsBlankSpace) {
         String value;
         do {
             if (title != null)
@@ -23,7 +23,7 @@ public final class InputUtils {
             else
                 System.out.print("> ");
             value = sc.nextLine().trim();
-        } while (value.isBlank());
+        } while (value.isBlank() && !acceptsBlankSpace);
         if (onlyOneWord) {
             Scanner auxsc = new Scanner(value);
             value = auxsc.next();
