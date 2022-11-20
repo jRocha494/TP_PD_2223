@@ -1,9 +1,10 @@
 package Server;
 
+import Models.Response;
 import utils.errorHandling.CustomException;
 import Models.User;
 import Server.jdbc.ConnDB;
-import utils.errorHandling.Errors;
+import utils.errorHandling.ResponseMessage;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -18,28 +19,35 @@ public class Server {
             throw new RuntimeException(e);
         }
     }
-
-    public void registerUser(User user) throws CustomException {
+    public Response registerUser(User user) {
         try {
             connDB.createUser(user.getName(), user.getUsername(), user.getPassword());
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, null);
         } catch (SQLException e) {
-            throw new CustomException("Error registering user", e);
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error registering user", e);
         }
     }
 
-    public User authenticateUser(User user) throws CustomException {
+    public Response authenticateUser(User user) {
         try {
-            return connDB.authenticateUser(user.getUsername(), user.getPassword());
+            User userAux = connDB.authenticateUser(user.getUsername(), user.getPassword());
+            if(userAux == null)
+                return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, userAux);
         } catch (SQLException e) {
-            throw new CustomException("Error authenticating user", e);
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error authenticating user", e);
         }
     }
 
-    public void editLoginData(int id, HashMap<String, String> editLoginMap) throws CustomException {
+    public Response editLoginData(int id, HashMap<String, String> editLoginMap) {
         try {
             connDB.updateUser(id, editLoginMap);
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, null);
         } catch (SQLException e) {
-            throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error editing user's data", e);
         }
     }
 }

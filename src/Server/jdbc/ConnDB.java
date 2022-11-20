@@ -151,4 +151,56 @@ public class ConnDB
         statement.executeUpdate(sqlQuery);
         statement.close();
     }
+
+    public void readBookings(boolean withConfirmedPayment) throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM reserva";
+        if(withConfirmedPayment){
+            sqlQuery += " WHERE pago = 1";
+        }else{
+            sqlQuery += " WHERE pago = 0";
+        }
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            int id = resultSet.getInt("id");
+            String dataHora = resultSet.getString("data_hora");
+            int idUtilizador = resultSet.getInt("id_utilizador");
+            int idEspetaculo = resultSet.getInt("id_espetaculo");
+            System.out.println("[" + id + "] " + idUtilizador + " - " + idEspetaculo + " - " + dataHora);
+        }
+
+        resultSet.close();
+        statement.close();
+    }
+
+    public void readShows(String chosenFilter, String searchText) throws Exception {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM espetaculo WHERE " + chosenFilter + " like " + "'%" + searchText + "%' AND visivel = 1";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            int id = resultSet.getInt("id");
+            String descricao = resultSet.getString("descricao");
+            String tipo = resultSet.getString("tipo");
+            String dataHora = resultSet.getString("data_hora");
+            int duracao = resultSet.getInt("duracao");
+            String local = resultSet.getString("local");
+            String localidade = resultSet.getString("localidade");
+            String pais = resultSet.getString("pais");
+            String classificacaoEtaria = resultSet.getString("classificacao_etaria");
+            System.out.println("[" + id + "] " + descricao + " - " + tipo + " - " + dataHora
+                    + " - " + duracao + " - " + local + " - " + localidade + " - " + pais
+                    + " - " + classificacaoEtaria);
+        }
+
+        resultSet.close();
+        statement.close();
+    }
 }

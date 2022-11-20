@@ -2,6 +2,7 @@ package Client;
 
 import utils.errorHandling.CustomException;
 import utils.InputUtils;
+import utils.errorHandling.ResponseMessage;
 
 public class ThreadUserInterface extends Thread{
     public ThreadUserInterface() {
@@ -17,26 +18,21 @@ public class ThreadUserInterface extends Thread{
                     "Login"/*,
                     "Exit"*/)) {
                 case 1 -> {
-                    try {
-                        Client.registerUser(
-                                InputUtils.readString("Name: ", false, false),
-                                InputUtils.readString("Username: ", true, false),
-                                InputUtils.readString("Password: ", false, false)
-                        );
-                    } catch (CustomException e) {
-                        InputUtils.logException(e.getMessage(), e.getCause());
-                    }
+                    ResponseMessage response = Client.registerUser(
+                            InputUtils.readString("Name: ", false, false),
+                            InputUtils.readString("Username: ", true, false),
+                            InputUtils.readString("Password: ", false, false)
+                    );
+                    System.out.println(response.getDescription());
                 }
                 case 2 -> {
-                    try {
-                        Client.authenticateUser(
-                                InputUtils.readString("Username", true, false),
-                                InputUtils.readString("Password", false, false)
-                        );
+                    ResponseMessage response = Client.authenticateUser(
+                            InputUtils.readString("Username", true, false),
+                            InputUtils.readString("Password", false, false)
+                    );
+                    System.out.println(response.getDescription());
+                    if(response.getCode() == 200)
                         exit = true;
-                    }catch (CustomException e){
-                        InputUtils.logException(e.getMessage(), e.getCause());
-                    }
                 }
 //                case 3 -> exit = true;
             }
@@ -48,16 +44,13 @@ public class ThreadUserInterface extends Thread{
                     "Edit login information"/*,
                     "Exit"*/)) {
                 case 1 -> {
-                    try {
-                        System.out.println("Press enter if you don't wish to update a certain field");
-                        Client.editLoginData(
-                                InputUtils.readString("Name: ", false, true),
-                                InputUtils.readString("Username: ", true, true),
-                                InputUtils.readString("Password: ", false, true)
-                        );
-                    } catch (CustomException e) {
-                        InputUtils.logException(e.getMessage(), e.getCause());
-                    }
+                    System.out.println("Press enter if you don't wish to update a certain field");
+                    ResponseMessage response = Client.editLoginData(
+                            InputUtils.readString("Name: ", false, true),
+                            InputUtils.readString("Username: ", true, true),
+                            InputUtils.readString("Password: ", false, true)
+                    );
+                    System.out.println(response.getDescription());
                 }
             }
         } while (!exit);

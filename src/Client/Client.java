@@ -1,8 +1,10 @@
 package Client;
 
+import Models.Response;
 import utils.errorHandling.CustomException;
 import Models.User;
 import Server.Server;
+import utils.errorHandling.ResponseMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,17 +21,19 @@ public class Client {
         threadList.add(tcl);
     }
 
-    public static void registerUser(String name, String username, String password) throws CustomException {
+    public static ResponseMessage registerUser(String name, String username, String password) {
         User user = new User(name, username, password);
-        server.registerUser(user);
+        return server.registerUser(user).getMessage();
     }
 
-    public static void authenticateUser(String username, String password) throws CustomException {
+    public static ResponseMessage authenticateUser(String username, String password) {
         User user = new User(username, password);
-        currentUser = server.authenticateUser(user);
+        Response response = server.authenticateUser(user);
+        currentUser = (User) response.getData();
+        return response.getMessage();
     }
 
-    public static void editLoginData(String name, String username, String password) throws CustomException {
+    public static ResponseMessage editLoginData(String name, String username, String password) {
         HashMap<String, String> editLoginMap = new HashMap<String, String>();
         if (!name.isBlank())
             editLoginMap.put("nome", name);
@@ -37,6 +41,6 @@ public class Client {
             editLoginMap.put("username", username);
         if (!password.isBlank())
             editLoginMap.put("password", password);
-        server.editLoginData(currentUser.getId(), editLoginMap);
+        return server.editLoginData(currentUser.getId(), editLoginMap).getMessage();
     }
 }
