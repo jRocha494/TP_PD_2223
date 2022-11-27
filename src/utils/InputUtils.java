@@ -1,5 +1,8 @@
 package utils;
 
+import Models.Show;
+
+import java.io.*;
 import java.util.Scanner;
 
 public final class InputUtils {
@@ -76,6 +79,18 @@ public final class InputUtils {
             sc.nextLine();
         } while (option < 1 || option > options.length);
         return option;
+    }
+
+    public static Show readAdminShowFile(String fileName) throws IOException {
+        File file = new File(fileName);
+        FileReader fr = new FileReader(file);
+        BufferedReader br = new BufferedReader(fr);
+        String line;
+
+        br.close();
+        fr.close();
+
+        return null;
     }
 
     public static void logException(String s, Throwable e){

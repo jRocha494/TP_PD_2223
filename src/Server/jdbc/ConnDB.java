@@ -1,10 +1,14 @@
 package Server.jdbc;
 
+import Models.Booking;
+import Models.Seat;
+import Models.Show;
 import Models.User;
 
 import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class ConnDB
 {
@@ -152,7 +156,8 @@ public class ConnDB
         statement.close();
     }
 
-    public void readBookings(boolean withConfirmedPayment) throws SQLException {
+    public List<Booking> readBookings(boolean withConfirmedPayment) throws SQLException {
+        List<Booking> bookingList = new ArrayList<>();
         Statement statement = dbConn.createStatement();
 
         String sqlQuery = "SELECT * FROM reserva";
@@ -166,41 +171,208 @@ public class ConnDB
 
         while(resultSet.next())
         {
-            int id = resultSet.getInt("id");
-            String dataHora = resultSet.getString("data_hora");
-            int idUtilizador = resultSet.getInt("id_utilizador");
-            int idEspetaculo = resultSet.getInt("id_espetaculo");
-            System.out.println("[" + id + "] " + idUtilizador + " - " + idEspetaculo + " - " + dataHora);
+            Booking newBooking = new Booking(resultSet.getInt("id"),
+                        resultSet.getString("data_hora"),
+                        resultSet.getInt("pago"),
+                        resultSet.getInt("id_utilizador"),
+                        resultSet.getInt("id_espetaculo"));
+            bookingList.add(newBooking);
         }
 
         resultSet.close();
         statement.close();
+        return bookingList;
     }
 
-    public void readShows(String chosenFilter, String searchText) throws Exception {
+    public List<Show> readShows(HashMap<String, String> filtersMap) throws SQLException {
+        List<Show> showList = new ArrayList<>();
         Statement statement = dbConn.createStatement();
 
-        String sqlQuery = "SELECT * FROM espetaculo WHERE " + chosenFilter + " like " + "'%" + searchText + "%' AND visivel = 1";
+        String sqlQuery = "SELECT * FROM espetaculo WHERE visivel = 1 ";
+        int index=0;
+        for (Map.Entry<String, String> entry : filtersMap.entrySet()) {
+            if (index++ < filtersMap.size())
+                sqlQuery += " AND ";
+            if(entry.getKey().equals("duracao"))
+                sqlQuery += entry.getKey() + "=" + Integer.parseInt(entry.getValue());
+            else
+                sqlQuery += entry.getKey() + " like " + entry.getValue();
+        }
 
         ResultSet resultSet = statement.executeQuery(sqlQuery);
 
         while(resultSet.next())
         {
-            int id = resultSet.getInt("id");
-            String descricao = resultSet.getString("descricao");
-            String tipo = resultSet.getString("tipo");
-            String dataHora = resultSet.getString("data_hora");
-            int duracao = resultSet.getInt("duracao");
-            String local = resultSet.getString("local");
-            String localidade = resultSet.getString("localidade");
-            String pais = resultSet.getString("pais");
-            String classificacaoEtaria = resultSet.getString("classificacao_etaria");
-            System.out.println("[" + id + "] " + descricao + " - " + tipo + " - " + dataHora
-                    + " - " + duracao + " - " + local + " - " + localidade + " - " + pais
-                    + " - " + classificacaoEtaria);
+            Show newShow = new Show(resultSet.getInt("id"),
+                    resultSet.getString("descricao"),
+                    resultSet.getString("tipo"),
+                    resultSet.getString("data_hora"),
+                    resultSet.getInt("duracao"),
+                    resultSet.getString("local"),
+                    resultSet.getString("localidade"),
+                    resultSet.getString("pais"),
+                    resultSet.getString("classificacao_etaria"));
+            showList.add(newShow);
         }
 
         resultSet.close();
         statement.close();
+        return showList;
+    }
+
+    public Show selectShow(int showId) throws SQLException {
+        Show show = null;
+
+        if(readShowFreeSeats(showId).isEmpty())
+            return null;
+
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM espetaculo WHERE id = " + showId;
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            show = new Show(resultSet.getInt("id"),
+                    resultSet.getString("descricao"),
+                    resultSet.getString("tipo"),
+                    resultSet.getString("data_hora"),
+                    resultSet.getInt("duracao"),
+                    resultSet.getString("local"),
+                    resultSet.getString("localidade"),
+                    resultSet.getString("pais"),
+                    resultSet.getString("classificacao_etaria"));
+        }
+
+        resultSet.close();
+        statement.close();
+
+        return show;
+    }
+
+    public List<Seat> readShowFreeSeats(int showId) throws SQLException {
+        List<Seat> freeSeatsList = new ArrayList<>();
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM lugar WHERE espetaculo_id = " + showId + " AND id not in (SELECT id_lugar FROM reserva_lugar)";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            Seat newSeat = new Seat(resultSet.getInt("id"),
+                    resultSet.getString("fila"),
+                    resultSet.getString("assento"),
+                    resultSet.getFloat("preco"),
+                    resultSet.getInt("espetaculo_id")
+            );
+            freeSeatsList.add(newSeat);
+        }
+
+        resultSet.close();
+        statement.close();
+
+        return freeSeatsList;
+    }
+
+    public List<Seat> readShowSeats(int showId) throws SQLException {
+        List<Seat> seatList = new ArrayList<>();
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM lugar WHERE espetaculo_id = " + showId;
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            Seat newSeat = new Seat(resultSet.getInt("id"),
+                    resultSet.getString("fila"),
+                    resultSet.getString("assento"),
+                    resultSet.getFloat("preco"),
+                    resultSet.getInt("espetaculo_id")
+                    );
+            seatList.add(newSeat);
+        }
+
+        resultSet.close();
+        statement.close();
+        return seatList;
+    }
+
+    public Seat selectSeat(String chosenRow, String chosenSeat, int showId) throws SQLException {
+        Seat seat = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM lugar WHERE espetaculo_id = " + showId +
+                " AND id not in (SELECT id_lugar FROM reserva_lugar)" +
+                " AND fila = '" + chosenRow + "' AND assento = '" + chosenSeat + "'";
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            seat = new Seat(resultSet.getInt("id"),
+                    resultSet.getString("fila"),
+                    resultSet.getString("assento"),
+                    resultSet.getFloat("preco"),
+                    resultSet.getInt("espetaculo_id")
+            );
+        }
+
+        resultSet.close();
+        statement.close();
+        return seat;
+    }
+
+    public Booking confirmBooking(int showId, List<Seat> selectedSeats, int userId) throws SQLException {
+        Booking booking = null;
+        Statement statement = dbConn.createStatement();
+
+        String timeStamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(Calendar.getInstance().getTime());
+        String sqlQuery = "INSERT INTO reserva(data_hora, id_utilizador, id_espetaculo) VALUES('" +
+                timeStamp + "'," + userId + "," + showId + ")";
+        if(statement.executeUpdate(sqlQuery) > 0)
+        {
+            booking = readUserLastBooking(userId);
+            insertBookingSeats(selectedSeats, booking.getId());
+        }
+
+        statement.close();
+        return booking;
+    }
+
+    private void insertBookingSeats(List<Seat> selectedSeats, int bookingId) throws SQLException {
+        String insertSql = "INSERT INTO reserva_lugar SELECT ?,? " +
+                "WHERE NOT EXISTS (SELECT 1 FROM reserva_lugar WHERE id_lugar = ?)";
+
+        PreparedStatement pstmt = dbConn.prepareStatement(insertSql);
+        for (Seat seat : selectedSeats) {
+            pstmt.setInt(1, bookingId);
+            pstmt.setInt(2, seat.getId());
+            pstmt.setInt(3, seat.getId());
+            pstmt.addBatch();
+        }
+        pstmt.executeBatch();
+    }
+
+    private Booking readUserLastBooking(int userId) throws SQLException {
+        Booking booking = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM reserva WHERE id_utilizador = " + userId + " ORDER BY id DESC LIMIT 1";
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            booking = new Booking(resultSet.getInt("id"),
+                    resultSet.getString("data_hora"),
+                    resultSet.getInt("pago"),
+                    resultSet.getInt("id_utilizador"),
+                    resultSet.getInt("id_espetaculo"));
+        }
+
+        resultSet.close();
+        statement.close();
+        return booking;
     }
 }
