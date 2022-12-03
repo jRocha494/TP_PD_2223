@@ -12,8 +12,9 @@ public class Show {
     String place;
     String country;
     String ageRating;
+    int visible;
 
-    public Show(int id, String description, String type, String dateTime, int duration, String local, String place, String country, String ageRating) {
+    public Show(int id, String description, String type, String dateTime, int duration, String local, String place, String country, String ageRating, int visible) {
         this.id = id;
         this.description = description;
         this.type = type;
@@ -23,6 +24,7 @@ public class Show {
         this.place = place;
         this.country = country;
         this.ageRating = ageRating;
+        this.visible = visible;
     }
 
     @Override
@@ -37,6 +39,7 @@ public class Show {
                 ", place='" + place + '\'' +
                 ", country='" + country + '\'' +
                 ", ageRating='" + ageRating + '\'' +
+                ", visible='" + visible + '\'' +
                 '}';
     }
 

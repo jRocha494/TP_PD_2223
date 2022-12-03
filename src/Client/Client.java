@@ -85,4 +85,16 @@ public class Client {
     public static Response confirmBooking(int selectedShow, List<Seat> selectedSeats) {
         return server.confirmBooking(selectedShow, selectedSeats, currentUser.getId());
     }
+
+    public static Response deleteBooking(int selectedBooking) {
+        return server.deleteBooking(selectedBooking, currentUser.getId());
+    }
+
+    public static Response payBooking(int selectedBooking) {
+        return server.payBooking(selectedBooking, currentUser.getId());
+    }
+
+    public static Response makeShowVisible(int selectedShow) {
+        return server.makeShowVisible(selectedShow);
+    }
 }

@@ -211,7 +211,8 @@ public class ConnDB
                     resultSet.getString("local"),
                     resultSet.getString("localidade"),
                     resultSet.getString("pais"),
-                    resultSet.getString("classificacao_etaria"));
+                    resultSet.getString("classificacao_etaria"),
+                    resultSet.getInt("visivel"));
             showList.add(newShow);
         }
 
@@ -242,7 +243,8 @@ public class ConnDB
                     resultSet.getString("local"),
                     resultSet.getString("localidade"),
                     resultSet.getString("pais"),
-                    resultSet.getString("classificacao_etaria"));
+                    resultSet.getString("classificacao_etaria"),
+                    resultSet.getInt("visivel"));
         }
 
         resultSet.close();
@@ -374,5 +376,80 @@ public class ConnDB
         resultSet.close();
         statement.close();
         return booking;
+    }
+
+    private Booking readUserBooking(int bookingId, int userId) throws SQLException {
+        Booking booking = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM reserva WHERE id = " + bookingId + " AND id_utilizador = " + userId + " ORDER BY id DESC LIMIT 1";
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            booking = new Booking(resultSet.getInt("id"),
+                    resultSet.getString("data_hora"),
+                    resultSet.getInt("pago"),
+                    resultSet.getInt("id_utilizador"),
+                    resultSet.getInt("id_espetaculo"));
+        }
+
+        resultSet.close();
+        statement.close();
+        return booking;
+    }
+
+    public Booking deleteBooking (int bookingId, int userId) throws SQLException{
+        Booking booking = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "DELETE FROM reserva WHERE pago = 0 AND id_utilizador = " + userId + " AND id = " + bookingId;
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while (resultSet.next()) {
+            deleteBookingSeats(bookingId);
+            booking = new Booking(resultSet.getInt("id"),
+                    resultSet.getString("data_hora"),
+                    resultSet.getInt("pago"),
+                    resultSet.getInt("id_utilizador"),
+                    resultSet.getInt("id_espetaculo"));
+        }
+
+        resultSet.close();
+        statement.close();
+        return booking;
+    }
+
+    private void deleteBookingSeats (int bookingId) throws SQLException{
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "DELETE FROM reserva_lugar WHERE id_reserva = " + bookingId;
+        statement.executeQuery(sqlQuery);
+
+        statement.close();
+    }
+
+
+    public Booking payBooking(int bookingId, int userId) throws SQLException {
+        Booking booking = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "UPDATE reserva SET pago = 1 WHERE id = " + bookingId + " AND id_utilizador = " + userId;
+        if(statement.executeUpdate(sqlQuery) > 0)
+        {
+            booking = readUserBooking(bookingId, userId);
+        }
+
+        statement.close();
+        return booking;
+    }
+
+    public void makeShowVisible(int selectedShow) throws SQLException {
+        Show show = null;
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "UPDATE espetaculo SET pago = 1 WHERE id = " + selectedShow;
+
+        statement.close();
     }
 }

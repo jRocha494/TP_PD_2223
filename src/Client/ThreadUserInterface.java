@@ -117,7 +117,12 @@ public class ThreadUserInterface extends Thread{
                             (csd.getSelectedSeats().isEmpty() && csd.getSelectedShow() != null)){
                         System.out.println("Details:\n" + Booking.fullDetails(csd.getSelectedShow(), csd.getSelectedSeats()));
                         if(InputUtils.chooseOption("Do you confirm these details and request a new Booking?", "Yes", "No") == 1){
-                            Client.confirmBooking(csd.getSelectedShow().getId(),csd.getSelectedSeats());
+                            response = Client.confirmBooking(csd.getSelectedShow().getId(),csd.getSelectedSeats());
+                            System.out.println(response.getMessage().getDescription());
+                            if(response.getMessage().getCode()==200 &&
+                            InputUtils.chooseOption("Do you want to proceed to the Booking Payment?", "Yes", "No") == 1){
+
+                            }
                         }
                     }
                 }

@@ -134,4 +134,38 @@ public class Server {
             //throw new CustomException("Error editing user's data", e);
         }
     }
+
+    public Response deleteBooking(int bookingId, int userId) {
+        try {
+            Booking booking = connDB.deleteBooking(bookingId, userId);
+            if(booking == null)
+                return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, booking);
+        } catch (SQLException e) {
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error editing user's data", e);
+        }
+    }
+
+    public Response payBooking(int selectedBooking, int userId) {
+        try {
+            Booking booking = connDB.payBooking(selectedBooking, userId);
+            if(booking == null)
+                return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, booking);
+        } catch (SQLException e) {
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error editing user's data", e);
+        }
+    }
+
+    public Response makeShowVisible(int selectedShow) {
+        try {
+            connDB.makeShowVisible(selectedShow);
+            return new Response(ResponseMessage.O_PEDRO_E_PARVO, null);
+        } catch (SQLException e) {
+            return new Response(ResponseMessage.USER_NOT_FOUND, null);
+            //throw new CustomException("Error editing user's data", e);
+        }
+    }
 }
