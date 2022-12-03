@@ -6,6 +6,9 @@ import utils.Message;
 import utils.MessageEnum;
 import utils.Response;
 import Data.User;
+import Models.*;
+import utils.InputUtils;
+import utils.errorHandling.CustomException;
 import Server.Server;
 import utils.ResponseMessageEnum;
 
@@ -16,6 +19,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class Client {
     private static User currentUser;
@@ -88,5 +93,59 @@ public class Client {
         if (!password.isBlank())
             editLoginMap.put("password", password);
         return Server.editLoginData(currentUser.getId(), editLoginMap).getMessage();
+    }
+
+    public static Response readBookings(boolean withConfirmedPayment) {
+        return server.readBookings(withConfirmedPayment);
+    }
+
+    public static Response readShows(String description, String type, String dateTime, String duration, String local, String place, String country, String ageRating) {
+        HashMap<String, String> filtersMap = new HashMap<String, String>();
+        if (!description.isBlank())
+            filtersMap.put("descricao", description);
+        if (!type.isBlank())
+            filtersMap.put("tipo", type);
+        if (!dateTime.isBlank())
+            filtersMap.put("data_hora", dateTime);
+        if (!duration.isBlank())
+            filtersMap.put("duracao", duration);
+        if (!local.isBlank())
+            filtersMap.put("local", local);
+        if (!place.isBlank())
+            filtersMap.put("localidade", place);
+        if (!country.isBlank())
+            filtersMap.put("pais", country);
+        if (!ageRating.isBlank())
+            filtersMap.put("classificacao_etaria", ageRating);
+
+        return server.readShows(filtersMap);
+    }
+
+    public static Response selectShow(int chosenId){
+        return server.selectShow(chosenId);
+    }
+
+    public static Response readShowFreeSeats(int chosenId){
+        return server.readShowFreeSeats(chosenId);
+    }
+
+    public static Response selectSeat(String chosenRow, String chosenSeat, int showId){
+        return server.selectSeat(chosenRow, chosenSeat, showId);
+    }
+
+    public static Response confirmBooking(int selectedShow, List<Seat> selectedSeats) {
+        return server.confirmBooking(selectedShow, selectedSeats, currentUser.getId());
+    }
+
+    public static Response deleteBooking(int selectedBooking) {
+        return server.deleteBooking(selectedBooking, currentUser.getId());
+    }
+
+    public static Response payBooking(int selectedBooking) {
+        return server.payBooking(selectedBooking, currentUser.getId());
+    }
+
+    public static Response makeShowVisible(int selectedShow) {
+        return server.makeShowVisible(selectedShow);
     }
 }
