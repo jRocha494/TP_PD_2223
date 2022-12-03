@@ -1,8 +1,7 @@
 package Client;
 
-import utils.errorHandling.CustomException;
 import utils.InputUtils;
-import utils.errorHandling.ResponseMessage;
+import utils.ResponseMessageEnum;
 
 public class ThreadUserInterface extends Thread{
     public ThreadUserInterface() {
@@ -18,7 +17,7 @@ public class ThreadUserInterface extends Thread{
                     "Login"/*,
                     "Exit"*/)) {
                 case 1 -> {
-                    ResponseMessage response = Client.registerUser(
+                    ResponseMessageEnum response = Client.registerUser(
                             InputUtils.readString("Name: ", false, false),
                             InputUtils.readString("Username: ", true, false),
                             InputUtils.readString("Password: ", false, false)
@@ -26,7 +25,7 @@ public class ThreadUserInterface extends Thread{
                     System.out.println(response.getDescription());
                 }
                 case 2 -> {
-                    ResponseMessage response = Client.authenticateUser(
+                    ResponseMessageEnum response = Client.authenticateUser(
                             InputUtils.readString("Username", true, false),
                             InputUtils.readString("Password", false, false)
                     );
@@ -45,7 +44,7 @@ public class ThreadUserInterface extends Thread{
                     "Exit"*/)) {
                 case 1 -> {
                     System.out.println("Press enter if you don't wish to update a certain field");
-                    ResponseMessage response = Client.editLoginData(
+                    ResponseMessageEnum response = Client.editLoginData(
                             InputUtils.readString("Name: ", false, true),
                             InputUtils.readString("Username: ", true, true),
                             InputUtils.readString("Password: ", false, true)

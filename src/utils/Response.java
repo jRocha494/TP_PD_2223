@@ -1,6 +1,4 @@
-package Models;
-
-import utils.errorHandling.ResponseMessage;
+package utils;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -8,15 +6,15 @@ import java.io.Serializable;
 public class Response implements Serializable {
     @Serial
     private final static long serialVersionUID = 1L;
-    ResponseMessage message;
+    ResponseMessageEnum message;
     Object data;
 
-    public Response(ResponseMessage message, Object data) {
+    public Response(ResponseMessageEnum message, Object data) {
         this.message = message;
         this.data = data;
     }
 
-    public ResponseMessage getMessage() {
+    public ResponseMessageEnum getMessage() {
         return message;
     }
 
@@ -24,7 +22,7 @@ public class Response implements Serializable {
         return data;
     }
 
-    public void setMessage(ResponseMessage message) {
+    public void setMessage(ResponseMessageEnum message) {
         this.message = message;
     }
 

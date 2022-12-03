@@ -1,6 +1,6 @@
 package Server.jdbc;
 
-import Models.User;
+import Data.User;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -8,12 +8,12 @@ import java.util.Map;
 
 public class ConnDB
 {
-    private final String DATABASE_URL = "jdbc:sqlite:PD-2022-23-TP.db";
     private Connection dbConn;
 
-    public ConnDB() throws SQLException
+    public ConnDB(String DATABASE_URL) throws SQLException
     {
         dbConn = DriverManager.getConnection(DATABASE_URL);
+        this.initializeDatabase();
     }
 
     public void close() throws SQLException

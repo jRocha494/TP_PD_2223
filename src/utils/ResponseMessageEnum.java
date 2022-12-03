@@ -1,18 +1,18 @@
-package utils.errorHandling;
+package utils;
 
 import java.io.Serial;
 import java.io.Serializable;
 
-public enum ResponseMessage implements Serializable {
+public enum ResponseMessageEnum implements Serializable {
     USER_NOT_FOUND(404, "User not found"),
-    O_PEDRO_E_PARVO(200, "E verdade sim senhor");
+    SUCCESS(200, "Success");
 
     @Serial
     private final static long serialVersionUID = 1L;
     private final int code;
     private final String description;
 
-    private ResponseMessage(int code, String description) {
+    private ResponseMessageEnum(int code, String description) {
         this.code = code;
         this.description = description;
     }
