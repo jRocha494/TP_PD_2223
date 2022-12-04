@@ -1,6 +1,6 @@
 package utils;
 
-import Models.Show;
+import Data.Show;
 
 import java.io.*;
 import java.util.Scanner;

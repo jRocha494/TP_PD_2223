@@ -1,14 +1,16 @@
 package Server;
 
 import Data.ServerPersistentData;
-import utils.Message;
-import utils.MessageEnum;
+import Data.User;
+import utils.Request;
+import utils.RequestEnum;
 import utils.Response;
 import utils.ResponseMessageEnum;
 
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ThreadClientConnection extends Thread{
     int port;
@@ -30,10 +32,10 @@ public class ThreadClientConnection extends Thread{
 
                 ByteArrayInputStream bais = new ByteArrayInputStream(dpRec.getData());
                 ObjectInputStream ois = new ObjectInputStream(bais);
-                Message msgRec = (Message) ois.readObject();
+                Request msgRec = (Request) ois.readObject();
 
                 System.out.println(msgRec);
-                if (msgRec.getMessage().equals(MessageEnum.MSG_CONNECT_SERVER.getMessage())){
+                if (msgRec.getRequestMessage().equals(RequestEnum.MSG_CONNECT_SERVER)){
                     Response msgResp = new Response(ResponseMessageEnum.SUCCESS, ServerPersistentData.getInstance().getServers());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -113,8 +115,51 @@ public class ThreadClientConnection extends Thread{
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
-                    Message msgRec = (Message) ois.readObject();
+                    Request msgRec = (Request) ois.readObject();
                     //TODO: read commands from client and send responses
+                    Response response = null;
+                    switch (msgRec.getRequestMessage()){
+                        case REQUEST_AUTHENTICATE_USER -> {
+                            response = Server.authenticateUser((User) msgRec.getRequestData());
+                        }
+                        case REQUEST_REGISTER_USER -> {
+                            response = Server.registerUser((User) msgRec.getRequestData());
+                        }
+                        case REQUEST_EDIT_LOGIN_DATA -> {
+                            response = Server.editLoginData((ArrayList) msgRec.getRequestData());
+                        }
+                        case REQUEST_READ_BOOKINGS -> {
+                            response = Server.readBookings((Boolean) msgRec.getRequestData());
+                        }
+                        case REQUEST_READ_SHOWS -> {
+                            response = Server.readShows((HashMap<String, String>) msgRec.getRequestData());
+                        }
+                        case REQUEST_SELECT_SHOW -> {
+                            response = Server.selectShow((Integer) msgRec.getRequestData());
+                        }
+                        case REQUEST_READ_SHOW_AVAILABLE_SEATS -> {
+                            response = Server.readShowAvailableSeats((Integer) msgRec.getRequestData());
+                        }
+                        case REQUEST_SELECT_SEAT -> {
+                            response = Server.selectSeat((ArrayList) msgRec.getRequestData());
+                        }
+                        case REQUEST_CONFIRM_BOOKING -> {
+                            response = Server.confirmBooking((ArrayList) msgRec.getRequestData());
+                        }
+                        case REQUEST_DELETE_BOOKING -> {
+                            response = Server.deleteBooking((ArrayList) msgRec.getRequestData());
+                        }
+                        case REQUEST_PAY_BOOKING -> {
+                            response = Server.payBooking((ArrayList) msgRec.getRequestData());
+                        }
+                        case REQUEST_MAKE_SHOW_VISIBLE -> {
+                            response = Server.makeShowVisible((Integer) msgRec.getRequestData());
+                        }
+                    }
+                    if (response != null){
+                        oos.writeUnshared(response);
+                    }
+
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

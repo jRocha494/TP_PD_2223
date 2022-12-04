@@ -4,8 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 
 public enum ResponseMessageEnum implements Serializable {
-    USER_NOT_FOUND(404, "User not found"),
-    SUCCESS(200, "Success");
+    NOT_FOUND(404, "Not found"),
+    SUCCESS(200, "Success"),
+    FAILED_DEPENDENCY(424, "Error creating dependencies"),
+    UNEXPECTED_DATA(403, "Unexpected data received");
 
     @Serial
     private final static long serialVersionUID = 1L;

@@ -1,12 +1,11 @@
 package Server.jdbc;
 
-import Models.Booking;
-import Models.Seat;
-import Models.Show;
-import Models.User;
+import Data.Booking;
+import Data.Seat;
+import Data.Show;
+import Data.User;
 
 import java.sql.*;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.*;
 

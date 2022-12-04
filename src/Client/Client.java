@@ -1,14 +1,11 @@
 package Client;
 
+import Data.Seat;
 import Data.ServerData;
-import Data.ServerPersistentData;
-import utils.Message;
-import utils.MessageEnum;
+import utils.Request;
+import utils.RequestEnum;
 import utils.Response;
 import Data.User;
-import Models.*;
-import utils.InputUtils;
-import utils.errorHandling.CustomException;
 import Server.Server;
 import utils.ResponseMessageEnum;
 
@@ -20,10 +17,10 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Client {
     private static User currentUser;
+    private static Socket socket = null;
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length != 2){
             System.out.println("Missing server port and server ip");
@@ -31,7 +28,7 @@ public class Client {
         }
 
         try(DatagramSocket ds = new DatagramSocket()) {
-            Message msg = new Message(MessageEnum.MSG_CONNECT_SERVER.getMessage());
+            Request msg = new Request(RequestEnum.MSG_CONNECT_SERVER, null);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(msg);
@@ -55,48 +52,56 @@ public class Client {
             ObjectInputStream ois = new ObjectInputStream(bais);
             Response msgRec = (Response) ois.readObject();
 
-            Map<Integer, ServerData> runningServers = (Map) msgRec.getData();
+            Map<Integer, ServerData> runningServers = (Map) msgRec.getResponseData();
             Map.Entry<Integer, ServerData> entry = runningServers.entrySet().iterator().next();
-            Socket socket = new Socket(entry.getValue().getIp(), entry.getValue().getPort());
+            socket = new Socket(entry.getValue().getIp(), entry.getValue().getPort());
             // TODO: send commands to server
+
+
+            ArrayList<Thread> clientThreadList = new ArrayList<>();
+            ThreadUserInterface tcl = new ThreadUserInterface();
+            clientThreadList.add(tcl);
+
+            for (Thread t : clientThreadList) // waits thread to conclude execution
+                t.join();
+            socket.close();
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-//
-//        ArrayList<Thread> clientThreadList = new ArrayList<>();
-//
-//        ThreadUserInterface tcl = new ThreadUserInterface();
-//        clientThreadList.add(tcl);
-//
-//        for (Thread t : clientThreadList) // waits thread to conclude execution
-//            t.join();
     }
 
-    public static ResponseMessageEnum registerUser(String name, String username, String password) {
+    public static Response registerUser(String name, String username, String password) {
         User user = new User(name, username, password);
-        return Server.registerUser(user).getMessage();
+        Request request = new Request(RequestEnum.REQUEST_REGISTER_USER, user);
+        return sendRequest(request);
     }
 
-    public static ResponseMessageEnum authenticateUser(String username, String password) {
+    public static Response authenticateUser(String username, String password) {
         User user = new User(username, password);
-        Response response = Server.authenticateUser(user);
-        currentUser = (User) response.getData();
-        return response.getMessage();
+        Request request = new Request(RequestEnum.REQUEST_AUTHENTICATE_USER, user);
+        Response response = sendRequest(request);
+        currentUser = (User) response.getResponseData();
+        return response;
     }
 
-    public static ResponseMessageEnum editLoginData(String name, String username, String password) {
-        HashMap<String, String> editLoginMap = new HashMap<String, String>();
+    public static Response editLoginData(String name, String username, String password) {
+        HashMap<String, String> editLoginMap = new HashMap<>();
         if (!name.isBlank())
             editLoginMap.put("nome", name);
         if (!username.isBlank())
             editLoginMap.put("username", username);
         if (!password.isBlank())
             editLoginMap.put("password", password);
-        return Server.editLoginData(currentUser.getId(), editLoginMap).getMessage();
+        ArrayList data = new ArrayList();
+        data.add(currentUser.getId());
+        data.add(editLoginMap);
+        Request request = new Request(RequestEnum.REQUEST_EDIT_LOGIN_DATA, data);
+        return sendRequest(request);
     }
 
     public static Response readBookings(boolean withConfirmedPayment) {
-        return server.readBookings(withConfirmedPayment);
+        Request request = new Request(RequestEnum.REQUEST_READ_BOOKINGS, withConfirmedPayment);
+        return sendRequest(request);
     }
 
     public static Response readShows(String description, String type, String dateTime, String duration, String local, String place, String country, String ageRating) {
@@ -118,34 +123,67 @@ public class Client {
         if (!ageRating.isBlank())
             filtersMap.put("classificacao_etaria", ageRating);
 
-        return server.readShows(filtersMap);
+        Request request = new Request(RequestEnum.REQUEST_READ_SHOWS, filtersMap);
+        return sendRequest(request);
     }
 
     public static Response selectShow(int chosenId){
-        return server.selectShow(chosenId);
+        Request request = new Request(RequestEnum.REQUEST_SELECT_SHOW, chosenId);
+        return sendRequest(request);
     }
 
-    public static Response readShowFreeSeats(int chosenId){
-        return server.readShowFreeSeats(chosenId);
+    public static Response readShowAvailableSeats(int chosenId){
+        Request request = new Request(RequestEnum.REQUEST_READ_SHOW_AVAILABLE_SEATS, chosenId);
+        return sendRequest(request);
     }
 
     public static Response selectSeat(String chosenRow, String chosenSeat, int showId){
-        return server.selectSeat(chosenRow, chosenSeat, showId);
+        ArrayList data = new ArrayList();
+        data.add(chosenRow);
+        data.add(chosenSeat);
+        data.add(showId);
+        Request request = new Request(RequestEnum.REQUEST_SELECT_SEAT, data);
+        return sendRequest(request);
     }
 
     public static Response confirmBooking(int selectedShow, List<Seat> selectedSeats) {
-        return server.confirmBooking(selectedShow, selectedSeats, currentUser.getId());
+        ArrayList data = new ArrayList();
+        data.add(selectedShow);
+        data.add(selectedSeats);
+        data.add(currentUser.getId());
+        Request request = new Request(RequestEnum.REQUEST_CONFIRM_BOOKING, data);
+        return sendRequest(request);
     }
 
     public static Response deleteBooking(int selectedBooking) {
-        return server.deleteBooking(selectedBooking, currentUser.getId());
+        ArrayList data = new ArrayList();
+        data.add(selectedBooking);
+        data.add(currentUser.getId());
+        Request request = new Request(RequestEnum.REQUEST_DELETE_BOOKING, data);
+        return sendRequest(request);
     }
 
     public static Response payBooking(int selectedBooking) {
-        return server.payBooking(selectedBooking, currentUser.getId());
+        ArrayList data = new ArrayList();
+        data.add(selectedBooking);
+        data.add(currentUser.getId());
+        Request request = new Request(RequestEnum.REQUEST_PAY_BOOKING, data);
+        return sendRequest(request);
     }
 
     public static Response makeShowVisible(int selectedShow) {
-        return server.makeShowVisible(selectedShow);
+        Request request = new Request(RequestEnum.REQUEST_PAY_BOOKING, selectedShow);
+        return sendRequest(request);    }
+
+    public static Response sendRequest(Request request){
+        try (ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())){
+            oos.writeUnshared(request);
+            return (Response) ois.readObject();
+        } catch (IOException e) {
+            return new Response(ResponseMessageEnum.FAILED_DEPENDENCY, null);
+        } catch (ClassNotFoundException e) {
+            return new Response(ResponseMessageEnum.UNEXPECTED_DATA, null);
+        }
     }
 }

@@ -2,22 +2,28 @@ package utils;
 
 import java.io.Serializable;
 
-public class Message implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private String message;
+public class Request implements Serializable {
+    private static final long serialVersionUID = 2L;
+    RequestEnum requestMessage;
+    Object requestData;
 
-    public Message(String message) {
-        this.message = message;
+    public Request(RequestEnum requestMessage, Object requestData) {
+        this.requestMessage = requestMessage;
+        this.requestData = requestData;
     }
 
-    public String getMessage() {
-        return message;
+    public RequestEnum getRequestMessage() {
+        return requestMessage;
+    }
+
+    public Object getRequestData() {
+        return requestData;
     }
 
     @Override
     public String toString() {
         return "Message{" +
-                "message='" + message + '\'' +
+                "message='" + requestMessage + '\'' +
                 '}';
     }
 }

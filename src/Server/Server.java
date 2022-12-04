@@ -1,13 +1,9 @@
 package Server;
 
-import Data.ServerData;
-import Data.ServerPersistentData;
-import utils.Message;
-import utils.MessageEnum;
+import Data.*;
+import utils.Request;
+import utils.RequestEnum;
 import utils.Response;
-import Data.User;
-import Models.*;
-import utils.errorHandling.CustomException;
 import Server.jdbc.ConnDB;
 import utils.ResponseMessageEnum;
 
@@ -19,10 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import static Data.Utils.*;
+
+
 public class Server {
-    final static int PORT_MULTICAST = 4004;
-    final static String IP_MULTICAST = "239.39.39.39";
-    final static String DATABASE_FILENAME = "PD-2022-23-TP.db";
     private static ConnDB connDB;
     private ServerData serverData;
     private ServerPersistentData serverPersistentData;
@@ -119,7 +115,7 @@ public class Server {
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
         InputStream is = socket.getInputStream();
 
-        oos.writeObject(new Message(MessageEnum.MSG_UPDATE_DATABASE.getMessage()));
+        oos.writeObject(new Request(RequestEnum.MSG_UPDATE_DATABASE, null));
         do{
             nBytes = is.read(readBytes);
             if (nBytes > -1)
@@ -173,8 +169,7 @@ public class Server {
             connDB.createUser(user.getName(), user.getUsername(), user.getPassword());
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.USER_NOT_FOUND, null);
-            //throw new CustomException("Error registering user", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
@@ -182,69 +177,65 @@ public class Server {
         try {
             User userAux = connDB.authenticateUser(user.getUsername(), user.getPassword());
             if(userAux == null)
-                return new Response(ResponseMessageEnum.USER_NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
             return new Response(ResponseMessageEnum.SUCCESS, userAux);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.USER_NOT_FOUND, null);
-            //throw new CustomException("Error authenticating user", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public static Response editLoginData(int id, HashMap<String, String> editLoginMap) {
+    public static Response editLoginData(ArrayList data) {
         try {
+            int id = (int) data.get(0);
+            HashMap<String, String> editLoginMap = (HashMap<String, String>) data.get(1);
             connDB.updateUser(id, editLoginMap);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response readBookings(boolean withConfirmedPayment) {
+    public static Response readBookings(boolean withConfirmedPayment) {
         try {
             List<Booking> bookingList = connDB.readBookings(withConfirmedPayment);
             if(bookingList == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, bookingList);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, bookingList);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response readShows(HashMap<String, String> filtersMap) {
+    public static Response readShows(HashMap<String, String> filtersMap) {
         try {
             List<Show> showList = connDB.readShows(filtersMap);
             if(showList == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, showList);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, showList);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response selectShow(int showId) {
+    public static Response selectShow(int showId) {
         try {
             Show show = connDB.selectShow(showId);
             if(show == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, show);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, show);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response readShowFreeSeats(int showId) {
+    public static Response readShowAvailableSeats(int showId) {
         try {
             List<Seat> seatList = connDB.readShowFreeSeats(showId);
             if(seatList == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, seatList);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, seatList);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
@@ -252,69 +243,73 @@ public class Server {
         try {
             List<Seat> seatList = connDB.readShowSeats(showId);
             if(seatList == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, seatList);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, seatList);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response selectSeat(String chosenRow, String chosenSeat, int showId) {
+    public static Response selectSeat(ArrayList data) {
         try {
+            String chosenRow = (String) data.get(0);
+            String chosenSeat = (String) data.get(1);
+            int showId = (int) data.get(2);
             Seat seat = connDB.selectSeat(chosenRow, chosenSeat, showId);
             if(seat == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, seat);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, seat);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response confirmBooking(int showId, List<Seat> selectedSeats, int userId) {
+    public static Response confirmBooking(ArrayList data) {
         try {
+            int showId = (int) data.get(0);
+            List<Seat> selectedSeats = (List<Seat>) data.get(1);
+            int userId = (int) data.get(2);
             Booking booking = connDB.confirmBooking(showId, selectedSeats, userId);
             if(booking == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, booking);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, booking);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response deleteBooking(int bookingId, int userId) {
+    public static Response deleteBooking(ArrayList data) {
         try {
+            int bookingId = (int) data.get(0);
+            int userId = (int) data.get(1);
             Booking booking = connDB.deleteBooking(bookingId, userId);
             if(booking == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, booking);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, booking);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response payBooking(int selectedBooking, int userId) {
+    public static Response payBooking(ArrayList data) {
         try {
-            Booking booking = connDB.payBooking(selectedBooking, userId);
+            int bookingId = (int) data.get(0);
+            int userId = (int) data.get(1);
+            Booking booking = connDB.payBooking(bookingId, userId);
             if(booking == null)
-                return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, booking);
+                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.SUCCESS, booking);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 
-    public Response makeShowVisible(int selectedShow) {
+    public static Response makeShowVisible(int selectedShow) {
         try {
             connDB.makeShowVisible(selectedShow);
-            return new Response(ResponseMessage.O_PEDRO_E_PARVO, null);
+            return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessage.USER_NOT_FOUND, null);
-            //throw new CustomException("Error editing user's data", e);
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
     }
 }

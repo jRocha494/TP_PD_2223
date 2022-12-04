@@ -6,27 +6,27 @@ import java.io.Serializable;
 public class Response implements Serializable {
     @Serial
     private final static long serialVersionUID = 1L;
-    ResponseMessageEnum message;
-    Object data;
+    ResponseMessageEnum responseMessage;
+    Object responseData;
 
-    public Response(ResponseMessageEnum message, Object data) {
-        this.message = message;
-        this.data = data;
+    public Response(ResponseMessageEnum responseMessage, Object responseData) {
+        this.responseMessage = responseMessage;
+        this.responseData = responseData;
     }
 
-    public ResponseMessageEnum getMessage() {
-        return message;
+    public ResponseMessageEnum getResponseMessage() {
+        return responseMessage;
     }
 
-    public Object getData() {
-        return data;
+    public Object getResponseData() {
+        return responseData;
     }
 
-    public void setMessage(ResponseMessageEnum message) {
-        this.message = message;
+    public void setResponseMessage(ResponseMessageEnum message) {
+        this.responseMessage = message;
     }
 
-    public void setData(Object data) {
-        this.data = data;
+    public void setResponseData(Object data) {
+        this.responseData = data;
     }
 }

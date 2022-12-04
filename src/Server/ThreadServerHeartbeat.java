@@ -2,19 +2,17 @@ package Server;
 
 import Data.ServerData;
 import Data.ServerPersistentData;
-import utils.Message;
-import utils.MessageEnum;
+import utils.Request;
+import utils.RequestEnum;
 
 import java.io.*;
 import java.net.*;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static Data.Utils.*;
+
 public class ThreadServerHeartbeat extends Thread{
-    final static String DATABASE_FILENAME = "./PD-2022-23-TP.db";
-    final static int PORT_MULTICAST = 4004;
-    final static String IP_MULTICAST = "239.39.39.39";
     MulticastSocket ms;
     ServerPersistentData serverPersistentData;
     ServerData serverData;
@@ -108,15 +106,15 @@ public class ThreadServerHeartbeat extends Thread{
                 ServerSocket ss = new ServerSocket(serverData.getPort());
                 while (!Thread.currentThread().isInterrupted()) {
                     Socket socket = ss.accept();
-
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    
                     OutputStream os = socket.getOutputStream();
+                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
-                    Message msgRec = (Message) ois.readObject();
+                    Request msgRec = (Request) ois.readObject();
 
                     System.out.println("RECEBIDO NA THREAD PARA ATUALIZAR BASE DADOS" + msgRec);
 
-                    if (msgRec.getMessage().equals(MessageEnum.MSG_UPDATE_DATABASE.getMessage())) {
+                    if (msgRec.getRequestMessage().equals(RequestEnum.MSG_UPDATE_DATABASE)) {
                         File f = new File(DATABASE_FILENAME);
                         if (f.isFile() && f.canRead()) {
                             FileInputStream fis = new FileInputStream(f);

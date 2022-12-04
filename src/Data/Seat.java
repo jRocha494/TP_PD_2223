@@ -1,4 +1,4 @@
-package Models;
+package Data;
 
 public class Seat implements Comparable<Seat>{
     int id;
