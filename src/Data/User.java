@@ -1,6 +1,11 @@
 package Data;
 
-public class User {
+import java.io.Serial;
+import java.io.Serializable;
+
+public class User implements Serializable {
+    @Serial
+    static final long serialVersionUID = 1L;
     int id;
     String name;
     String username;

@@ -18,9 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
 
+import static Data.Utils.*;
+
 public class Client {
     private static User currentUser;
     private static Socket socket = null;
+    private static ObjectInputStream _ois;
+    private static ObjectOutputStream _oos;
     public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length != 2){
             System.out.println("Missing server port and server ip");
@@ -44,19 +48,19 @@ public class Client {
             System.out.println("Sending to server");
             ds.send(dpSend);
 
-
-            DatagramPacket dpRec = new DatagramPacket(new byte[256], 256);
+            DatagramPacket dpRec = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
             ds.receive(dpRec);
 
             ByteArrayInputStream bais = new ByteArrayInputStream(dpRec.getData());
             ObjectInputStream ois = new ObjectInputStream(bais);
             Response msgRec = (Response) ois.readObject();
 
-            Map<Integer, ServerData> runningServers = (Map) msgRec.getResponseData();
-            Map.Entry<Integer, ServerData> entry = runningServers.entrySet().iterator().next();
-            socket = new Socket(entry.getValue().getIp(), entry.getValue().getPort());
-            // TODO: send commands to server
-
+            List<ServerData> runningServers = (List<ServerData>) msgRec.getResponseData();
+            ServerData entry = runningServers.get(0);
+            System.out.println("Connecting to: " + entry.getIp() + ":" + entry.getPort());
+            socket = new Socket(entry.getIp(), entry.getPort());
+            _oos = new ObjectOutputStream(socket.getOutputStream());
+            _ois = new ObjectInputStream(socket.getInputStream());
 
             ArrayList<Thread> clientThreadList = new ArrayList<>();
             ThreadUserInterface tcl = new ThreadUserInterface();
@@ -176,10 +180,9 @@ public class Client {
         return sendRequest(request);    }
 
     public static Response sendRequest(Request request){
-        try (ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())){
-            oos.writeUnshared(request);
-            return (Response) ois.readObject();
+        try{
+            _oos.writeObject(request);
+            return (Response) _ois.readObject();
         } catch (IOException e) {
             return new Response(ResponseMessageEnum.FAILED_DEPENDENCY, null);
         } catch (ClassNotFoundException e) {

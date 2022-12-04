@@ -5,9 +5,10 @@ import java.io.Serializable;
 
 public class ServerData implements Serializable, Comparable<ServerData> {
     @Serial
-    static final long serialVersionUID = 2L;
+    static final long serialVersionUID = 3L;
     int nmrConnections;
     int port;
+    int portDatabaseUpdate;
     String ip;
     int databaseVersion;
     boolean availability;
@@ -16,6 +17,7 @@ public class ServerData implements Serializable, Comparable<ServerData> {
     public ServerData(int connections, int port, String ip) {
         this.nmrConnections = connections;
         this.port = port;
+        this.portDatabaseUpdate = port+1;
         this.ip = ip;
         this.availability = true;
         this.databaseVersion = 1;
@@ -27,6 +29,10 @@ public class ServerData implements Serializable, Comparable<ServerData> {
 
     public int getPort() {
         return port;
+    }
+
+    public int getPortDatabaseUpdate() {
+        return portDatabaseUpdate;
     }
 
     public String getIp() {
@@ -45,6 +51,14 @@ public class ServerData implements Serializable, Comparable<ServerData> {
         this.lastSentHeartbeat = lastSentHeartbeat;
     }
 
+    public void incrementDatabaseVersion() {
+        this.databaseVersion += 1;
+    }
+
+    public void incrementNmrConnections() {
+        this.nmrConnections += 1;
+    }
+
     @Override
     public int compareTo(ServerData serverData) {
         return this.nmrConnections - serverData.getNmrConnections();
@@ -53,9 +67,13 @@ public class ServerData implements Serializable, Comparable<ServerData> {
     @Override
     public String toString() {
         return "ServerData{" +
-                "connections=" + nmrConnections +
+                "nmrConnections=" + nmrConnections +
                 ", port=" + port +
+                ", portDatabaseUpdate=" + portDatabaseUpdate +
                 ", ip='" + ip + '\'' +
+                ", databaseVersion=" + databaseVersion +
+                ", availability=" + availability +
+                ", lastSentHeartbeat=" + lastSentHeartbeat +
                 '}';
     }
 }

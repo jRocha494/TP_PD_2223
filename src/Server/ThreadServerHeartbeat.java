@@ -101,12 +101,12 @@ public class ThreadServerHeartbeat extends Thread{
         @Override
         public void run() {
             int nBytes;
-            byte[] readBytes = new byte[4*1024];
+            byte[] readBytes = new byte[MAX_BYTES];
             try {
-                ServerSocket ss = new ServerSocket(serverData.getPort());
+                ServerSocket ss = new ServerSocket(serverData.getPortDatabaseUpdate());
                 while (!Thread.currentThread().isInterrupted()) {
                     Socket socket = ss.accept();
-                    
+
                     OutputStream os = socket.getOutputStream();
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
@@ -154,7 +154,7 @@ public class ThreadServerHeartbeat extends Thread{
         public void run() {
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-                    DatagramPacket dpRecDifusao = new DatagramPacket(new byte[256], 256);
+                    DatagramPacket dpRecDifusao = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
                     ms.receive(dpRecDifusao);
 
                     ByteArrayInputStream bais = new ByteArrayInputStream(dpRecDifusao.getData());
@@ -166,7 +166,12 @@ public class ThreadServerHeartbeat extends Thread{
                     if (objRec instanceof ServerData){
                         // if object received wasn't sent by the thread's own server
                         if (((ServerData) objRec).getPort() != selfPort) {
-                            serverPersistentData.getServers().put(((ServerData) objRec).getPort(), (ServerData) objRec);
+                            System.out.println("SELF PORT: " + selfPort);
+//                            serverPersistentData.getServers().put(((ServerData) objRec).getPort(), (ServerData) objRec);
+                            synchronized (serverPersistentData) {
+                                if (!serverPersistentData.serverExists(((ServerData) objRec).getPort()))
+                                    serverPersistentData.addServer((ServerData) objRec);
+                            }
                         }
                     }
                 }

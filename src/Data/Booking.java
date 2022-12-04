@@ -1,10 +1,14 @@
 package Data;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Booking {
+public class Booking implements Serializable {
+    @Serial
+    static final long serialVersionUID = 1L;
     int id;
     String dateTime;
     int paid;

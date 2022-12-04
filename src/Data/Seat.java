@@ -1,6 +1,11 @@
 package Data;
 
-public class Seat implements Comparable<Seat>{
+import java.io.Serial;
+import java.io.Serializable;
+
+public class Seat implements Comparable<Seat>, Serializable {
+    @Serial
+    static final long serialVersionUID = 1L;
     int id;
     String row;
     String seat;

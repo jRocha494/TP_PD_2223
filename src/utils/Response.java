@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class Response implements Serializable {
     @Serial
-    private final static long serialVersionUID = 1L;
+    private final static long serialVersionUID = 2L;
     ResponseMessageEnum responseMessage;
     Object responseData;
 

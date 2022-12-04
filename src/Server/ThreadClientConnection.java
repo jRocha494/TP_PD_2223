@@ -12,9 +12,11 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ThreadClientConnection extends Thread{
-    int port;
+import static Data.Utils.MAX_BYTES;
 
+public class ThreadClientConnection extends Thread{
+    static ServerPersistentData serverPersistentData = ServerPersistentData.getInstance();
+    int port;
     public ThreadClientConnection(int port) {
         this.port = port;
         this.start();
@@ -26,7 +28,7 @@ public class ThreadClientConnection extends Thread{
 
         try (DatagramSocket ds = new DatagramSocket(port)){
             while (!Thread.currentThread().isInterrupted()){
-                DatagramPacket dpRec = new DatagramPacket(new byte[256], 256);
+                DatagramPacket dpRec = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
                 System.out.println("Waiting for clients");
                 ds.receive(dpRec);
 
@@ -36,10 +38,10 @@ public class ThreadClientConnection extends Thread{
 
                 System.out.println(msgRec);
                 if (msgRec.getRequestMessage().equals(RequestEnum.MSG_CONNECT_SERVER)){
-                    Response msgResp = new Response(ResponseMessageEnum.SUCCESS, ServerPersistentData.getInstance().getServers());
+                    Response msgResp = new Response(ResponseMessageEnum.SUCCESS, ServerPersistentData.getInstance().getServersList());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ObjectOutputStream oos = new ObjectOutputStream(baos);
-                    oos.writeUnshared(msgResp);
+                    oos.writeObject(msgResp);
 
                     byte[] msgToSend = baos.toByteArray();
                     InetAddress ipClient = dpRec.getAddress();
@@ -59,6 +61,7 @@ public class ThreadClientConnection extends Thread{
             System.out.println("Error creating resources to await client's connections");
         } catch (IOException e) {
             System.out.println("Error getting data from client");
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             System.out.println("Error reading data received from client");
         }finally {
@@ -75,6 +78,7 @@ public class ThreadClientConnection extends Thread{
         ArrayList<Thread> clientCommunicationThread;
         public AcceptClients(int port) {
             this.port = port;
+            this.clientCommunicationThread = new ArrayList<>();
             this.start();
         }
 
@@ -83,8 +87,11 @@ public class ThreadClientConnection extends Thread{
             try (ServerSocket ss = new ServerSocket(port);){
                 while (!Thread.currentThread().isInterrupted()) {
                     Socket socket = ss.accept();
-                    CommunicateWithClient cwc = new CommunicateWithClient(socket);
+                    CommunicateWithClient cwc = new CommunicateWithClient(socket, port);
                     clientCommunicationThread.add(cwc);
+                    System.out.println("PORT: " + port);
+                    System.out.println("LIST RUNNING SERVERS: " + serverPersistentData.getServers());
+                    serverPersistentData.incrementNmrConnections(port);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -103,18 +110,19 @@ public class ThreadClientConnection extends Thread{
 
     static class CommunicateWithClient extends Thread{
         Socket socket;
-        public CommunicateWithClient(Socket socket) {
+        int port;
+        public CommunicateWithClient(Socket socket, int port) {
+            this.port = port;
             this.socket = socket;
             this.start();
         }
 
         @Override
         public void run() {
-            try {
-                while (!Thread.currentThread().isInterrupted()) {
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            try(ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream())) {
 
+                while (!Thread.currentThread().isInterrupted()) {
                     Request msgRec = (Request) ois.readObject();
                     //TODO: read commands from client and send responses
                     Response response = null;
@@ -157,9 +165,13 @@ public class ThreadClientConnection extends Thread{
                         }
                     }
                     if (response != null){
-                        oos.writeUnshared(response);
+                        if (response.getResponseMessage().getCode() == 200) {
+                            System.out.println("PORT: " + port);
+                            System.out.println("LIST RUNNING SERVERS: " + serverPersistentData.getServers());
+                            serverPersistentData.incrementDatabaseVersion(port);
+                        }
+                        oos.writeObject(response);
                     }
-
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -168,6 +180,7 @@ public class ThreadClientConnection extends Thread{
             } finally {
                 try {
                     socket.close();
+                    this.interrupt();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

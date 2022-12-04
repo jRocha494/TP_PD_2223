@@ -1,8 +1,12 @@
 package Data;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
-public class Show {
+public class Show implements Serializable {
+    @Serial
+    static final long serialVersionUID = 1L;
     int id;
     String description;
     String type;

@@ -47,6 +47,7 @@ public class Server {
 
         try {
             System.out.println("IP: " + InetAddress.getLocalHost());
+            System.out.println("PORT: " + args[0]);
             Server server = new Server(
                     Integer.parseInt(args[0]),
                     InetAddress.getLocalHost().getHostAddress(),
@@ -59,15 +60,18 @@ public class Server {
             ms.joinGroup(sa, ni);
 
             // set timeout to receive heartbeats to 30 seconds
-            ms.setSoTimeout(30000);
+            ms.setSoTimeout(15000);
+//            ms.setSoTimeout(30000);
             server.populateRunningServers(ms);
             // sets multicast socket's timeout back to 0 (doesn't time out)
             ms.setSoTimeout(0);
 
             // if server's database is out of date
             if (server.outOfDateDatabase()){
+                System.out.println("DATABASE OUT OF DATE");
                 server.updateDatabase();
             }
+            connDB = new ConnDB(server.databaseLocation);
 
             ThreadServerHeartbeat tsh = new ThreadServerHeartbeat(ms, server.serverData, server.serverPersistentData);
             server.serverThreadList.add(tsh);
@@ -86,6 +90,8 @@ public class Server {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -103,7 +109,7 @@ public class Server {
                         eligibleServer = entryServerData;
                 }
 
-        byte[] readBytes = new byte[4*1024];
+        byte[] readBytes = new byte[MAX_BYTES];
         int nBytes;
         //TODO: Must get ip and port from somewhere
         String fileDirectory = DATABASE_FILENAME;
@@ -111,7 +117,7 @@ public class Server {
         filename.createNewFile();
         FileOutputStream fos = new FileOutputStream(filename, false);
 
-        Socket socket = new Socket(eligibleServer.getIp(), eligibleServer.getPort());
+        Socket socket = new Socket(eligibleServer.getIp(), eligibleServer.getPortDatabaseUpdate());
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
         InputStream is = socket.getInputStream();
 
@@ -133,10 +139,11 @@ public class Server {
     private void populateRunningServers(MulticastSocket ms){
         System.out.println("Populating running servers");
         long t= System.currentTimeMillis();
-        long end = t+30000;
+        long end = t+5000;
+//        long end = t+30000;
         while(System.currentTimeMillis() < end) {
             try {
-                DatagramPacket dpRecDifusao = new DatagramPacket(new byte[256], 256);
+                DatagramPacket dpRecDifusao = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
                 ms.receive(dpRecDifusao);
 
                 ByteArrayInputStream bais = new ByteArrayInputStream(dpRecDifusao.getData());
@@ -147,7 +154,8 @@ public class Server {
 
                 if (objRec instanceof ServerData) {
                     synchronized (serverPersistentData) {
-                        serverPersistentData.addServer((ServerData) objRec);
+                        if (!serverPersistentData.serverExists(((ServerData) objRec).getPort()))
+                            serverPersistentData.addServer((ServerData) objRec);
                     }
                 }
             } catch (SocketTimeoutException e) {
@@ -159,8 +167,7 @@ public class Server {
                 System.out.println("Error reading heartbeat sent by running servers.");
             }
         }
-
-
+        System.out.println("Finished populating running servers");
     }
 
 
