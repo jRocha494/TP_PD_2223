@@ -176,7 +176,7 @@ public class Server {
             connDB.createUser(user.getName(), user.getUsername(), user.getPassword());
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -184,10 +184,10 @@ public class Server {
         try {
             User userAux = connDB.authenticateUser(user.getUsername(), user.getPassword());
             if(userAux == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, userAux);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -198,7 +198,7 @@ public class Server {
             connDB.updateUser(id, editLoginMap);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -206,10 +206,10 @@ public class Server {
         try {
             List<Booking> bookingList = connDB.readBookings(withConfirmedPayment);
             if(bookingList == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, bookingList);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -217,10 +217,10 @@ public class Server {
         try {
             List<Show> showList = connDB.readShows(filtersMap);
             if(showList == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, showList);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -228,10 +228,10 @@ public class Server {
         try {
             Show show = connDB.selectShow(showId);
             if(show == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, show);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -239,10 +239,10 @@ public class Server {
         try {
             List<Seat> seatList = connDB.readShowFreeSeats(showId);
             if(seatList == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, seatList);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -250,10 +250,10 @@ public class Server {
         try {
             List<Seat> seatList = connDB.readShowSeats(showId);
             if(seatList == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, seatList);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -264,10 +264,10 @@ public class Server {
             int showId = (int) data.get(2);
             Seat seat = connDB.selectSeat(chosenRow, chosenSeat, showId);
             if(seat == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, seat);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -278,10 +278,10 @@ public class Server {
             int userId = (int) data.get(2);
             Booking booking = connDB.confirmBooking(showId, selectedSeats, userId);
             if(booking == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, booking);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -292,7 +292,7 @@ public class Server {
             connDB.deleteBooking(bookingId, userId);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -302,10 +302,10 @@ public class Server {
             int userId = (int) data.get(1);
             Booking booking = connDB.payBooking(bookingId, userId);
             if(booking == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
+                return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
             return new Response(ResponseMessageEnum.SUCCESS, booking);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -314,7 +314,7 @@ public class Server {
             connDB.makeShowVisible(selectedShow);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -323,7 +323,7 @@ public class Server {
             connDB.deleteShow(selectedShow);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 
@@ -332,7 +332,7 @@ public class Server {
             connDB.logout(userId);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
-            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+            return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);
         }
     }
 }

@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 
 public enum ResponseMessageEnum implements Serializable {
-    NOT_FOUND(404, "Not found"),
+    ERROR_OCCURRED(400, "Error occurred"),
     SUCCESS(200, "Success"),
     FAILED_DEPENDENCY(424, "Error creating dependencies"),
     UNEXPECTED_DATA(403, "Unexpected data received");
