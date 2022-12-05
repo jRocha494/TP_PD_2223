@@ -19,7 +19,7 @@ public enum RequestEnum implements Serializable {
     REQUEST_PAY_BOOKING,
     REQUEST_MAKE_SHOW_VISIBLE,
     REQUEST_DELETE_SHOW,
-    REQUEST_LOGOUT;
+    REQUEST_LOGOUT,
     PREPARE,
     COMMIT;
 
