@@ -20,7 +20,7 @@ import static Data.Utils.*;
 
 public class Server {
     private static ConnDB connDB;
-    private ServerData serverData;
+    private static ServerData serverData;
     private ServerPersistentData serverPersistentData;
     private ArrayList<Thread> serverThreadList;
     private String databaseLocation;
@@ -36,6 +36,10 @@ public class Server {
         }
 
 //        this.connDB = connDB;
+    }
+
+    public static ServerData getServerData() {
+        return serverData;
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -68,15 +72,14 @@ public class Server {
 
             // if server's database is out of date
             if (server.outOfDateDatabase()){
-                System.out.println("DATABASE OUT OF DATE");
                 server.updateDatabase();
             }
             connDB = new ConnDB(server.databaseLocation);
 
-            ThreadServerHeartbeat tsh = new ThreadServerHeartbeat(ms, server.serverData, server.serverPersistentData);
+            ThreadServerHeartbeat tsh = new ThreadServerHeartbeat(ms);
             server.serverThreadList.add(tsh);
 
-            ThreadClientConnection tcn = new ThreadClientConnection(Integer.parseInt(args[0]));
+            ThreadClientConnection tcn = new ThreadClientConnection(Integer.parseInt(args[0]), ms);
             server.serverThreadList.add(tcn);
 
             // waits threads to conclude execution
@@ -99,29 +102,30 @@ public class Server {
         System.out.println("Updating database");
         ServerData eligibleServer = null;
 
-        for(ServerData entryServerData : serverPersistentData.getServers().values())
-            if (entryServerData.getDatabaseVersion() > serverData.getDatabaseVersion())
+        for(ServerData entryServerData : serverPersistentData.getServers().values()) {
+            if (entryServerData.getDatabaseVersion() > serverData.getDatabaseVersion()) {
                 if (eligibleServer == null)
                     eligibleServer = entryServerData;
-                else{
+                else {
                     if (entryServerData.getDatabaseVersion() >= eligibleServer.getDatabaseVersion()
                             && entryServerData.getNmrConnections() < eligibleServer.getNmrConnections())
                         eligibleServer = entryServerData;
                 }
+            }
+        }
+        connectWithServerToUpdateDatabase(eligibleServer.getIp(), eligibleServer.getPortDatabaseUpdate());
+    }
 
+    public static void connectWithServerToUpdateDatabase(String ip, int port) throws IOException {
         byte[] readBytes = new byte[MAX_BYTES];
         int nBytes;
-        //TODO: Must get ip and port from somewhere
-        String fileDirectory = DATABASE_FILENAME;
-        File filename = new File(fileDirectory);
-        filename.createNewFile();
-        FileOutputStream fos = new FileOutputStream(filename, false);
+        FileOutputStream fos = new FileOutputStream(DATABASE_FILENAME);
 
-        Socket socket = new Socket(eligibleServer.getIp(), eligibleServer.getPortDatabaseUpdate());
+        Socket socket = new Socket(ip, port);
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
         InputStream is = socket.getInputStream();
 
-        oos.writeObject(new Request(RequestEnum.MSG_UPDATE_DATABASE, null));
+        oos.writeUnshared(new Request(RequestEnum.MSG_UPDATE_DATABASE, null));
         do{
             nBytes = is.read(readBytes);
             if (nBytes > -1)

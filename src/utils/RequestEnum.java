@@ -20,6 +20,8 @@ public enum RequestEnum implements Serializable {
     REQUEST_MAKE_SHOW_VISIBLE,
     REQUEST_DELETE_SHOW,
     REQUEST_LOGOUT;
+    PREPARE,
+    COMMIT;
 
     @Serial
     private static final long serialVersionUID = 1L;

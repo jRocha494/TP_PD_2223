@@ -35,7 +35,7 @@ public class Client {
             Request msg = new Request(RequestEnum.MSG_CONNECT_SERVER, null);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(msg);
+            oos.writeUnshared(msg);
 
             byte[] msgToSend = baos.toByteArray();
             DatagramPacket dpSend = new DatagramPacket(
@@ -45,7 +45,6 @@ public class Client {
                     Integer.parseInt(args[0])
             );
 
-            System.out.println("Sending to server");
             ds.send(dpSend);
 
             DatagramPacket dpRec = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
@@ -192,7 +191,7 @@ public class Client {
 
     public static Response sendRequest(Request request){
         try{
-            _oos.writeObject(request);
+            _oos.writeUnshared(request);
             return (Response) _ois.readObject();
         } catch (IOException e) {
             return new Response(ResponseMessageEnum.FAILED_DEPENDENCY, null);

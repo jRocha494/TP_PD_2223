@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class ServerData implements Serializable, Comparable<ServerData> {
     @Serial
-    static final long serialVersionUID = 3L;
+    static final long serialVersionUID = 4L;
     int nmrConnections;
     int port;
     int portDatabaseUpdate;
@@ -21,6 +21,16 @@ public class ServerData implements Serializable, Comparable<ServerData> {
         this.ip = ip;
         this.availability = true;
         this.databaseVersion = 1;
+    }
+
+    public ServerData(ServerData serverData){
+        this.nmrConnections = serverData.nmrConnections;
+        this.port = serverData.port;
+        this.portDatabaseUpdate = serverData.portDatabaseUpdate;
+        this.ip = serverData.ip;
+        this.availability = serverData.availability;
+        this.databaseVersion = serverData.databaseVersion;
+        this.lastSentHeartbeat = serverData.lastSentHeartbeat;
     }
 
     public int getDatabaseVersion() {
@@ -55,6 +65,10 @@ public class ServerData implements Serializable, Comparable<ServerData> {
         this.databaseVersion += 1;
     }
 
+    public void setDatabaseVersion(int databaseVersion) {
+        this.databaseVersion = databaseVersion;
+    }
+
     public void incrementNmrConnections() {
         this.nmrConnections += 1;
     }
@@ -76,4 +90,5 @@ public class ServerData implements Serializable, Comparable<ServerData> {
                 ", lastSentHeartbeat=" + lastSentHeartbeat +
                 '}';
     }
+
 }

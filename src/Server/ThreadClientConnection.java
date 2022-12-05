@@ -12,36 +12,36 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static Data.Utils.MAX_BYTES;
+import static Data.Utils.*;
 
 public class ThreadClientConnection extends Thread{
     static ServerPersistentData serverPersistentData = ServerPersistentData.getInstance();
     int port;
-    public ThreadClientConnection(int port) {
+    MulticastSocket ms;
+    public ThreadClientConnection(int port, MulticastSocket ms) {
         this.port = port;
+        this.ms = ms;
         this.start();
     }
 
     @Override
     public void run(){
-        AcceptClients ac = new AcceptClients(port);
+        AcceptClients ac = new AcceptClients(port, ms);
 
         try (DatagramSocket ds = new DatagramSocket(port)){
             while (!Thread.currentThread().isInterrupted()){
                 DatagramPacket dpRec = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
-                System.out.println("Waiting for clients");
                 ds.receive(dpRec);
 
                 ByteArrayInputStream bais = new ByteArrayInputStream(dpRec.getData());
                 ObjectInputStream ois = new ObjectInputStream(bais);
                 Request msgRec = (Request) ois.readObject();
 
-                System.out.println(msgRec);
                 if (msgRec.getRequestMessage().equals(RequestEnum.MSG_CONNECT_SERVER)){
                     Response msgResp = new Response(ResponseMessageEnum.SUCCESS, ServerPersistentData.getInstance().getServersList());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ObjectOutputStream oos = new ObjectOutputStream(baos);
-                    oos.writeObject(msgResp);
+                    oos.writeUnshared(msgResp);
 
                     byte[] msgToSend = baos.toByteArray();
                     InetAddress ipClient = dpRec.getAddress();
@@ -75,9 +75,11 @@ public class ThreadClientConnection extends Thread{
 
     static class AcceptClients extends Thread {
         int port;
+        MulticastSocket ms;
         ArrayList<Thread> clientCommunicationThread;
-        public AcceptClients(int port) {
+        public AcceptClients(int port, MulticastSocket ms) {
             this.port = port;
+            this.ms = ms;
             this.clientCommunicationThread = new ArrayList<>();
             this.start();
         }
@@ -87,11 +89,9 @@ public class ThreadClientConnection extends Thread{
             try (ServerSocket ss = new ServerSocket(port);){
                 while (!Thread.currentThread().isInterrupted()) {
                     Socket socket = ss.accept();
-                    CommunicateWithClient cwc = new CommunicateWithClient(socket, port);
+                    CommunicateWithClient cwc = new CommunicateWithClient(socket, port, ms);
                     clientCommunicationThread.add(cwc);
-                    System.out.println("PORT: " + port);
-                    System.out.println("LIST RUNNING SERVERS: " + serverPersistentData.getServers());
-                    serverPersistentData.incrementNmrConnections(port);
+                    Server.getServerData().incrementNmrConnections();
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -110,10 +110,12 @@ public class ThreadClientConnection extends Thread{
 
     static class CommunicateWithClient extends Thread{
         Socket socket;
+        MulticastSocket ms;
         int port;
-        public CommunicateWithClient(Socket socket, int port) {
+        public CommunicateWithClient(Socket socket, int port, MulticastSocket ms) {
             this.port = port;
             this.socket = socket;
+            this.ms = ms;
             this.start();
         }
 
@@ -172,11 +174,10 @@ public class ThreadClientConnection extends Thread{
                     }
                     if (response != null){
                         if (response.getResponseMessage().getCode() == 200) {
-                            System.out.println("PORT: " + port);
-                            System.out.println("LIST RUNNING SERVERS: " + serverPersistentData.getServers());
-                            serverPersistentData.incrementDatabaseVersion(port);
+                            Server.getServerData().incrementDatabaseVersion();
+                            prepareRunningServers(ms);
                         }
-                        oos.writeObject(response);
+                        oos.writeUnshared(response);
                     }
                 }
             } catch (IOException e) {
@@ -190,6 +191,68 @@ public class ThreadClientConnection extends Thread{
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+            }
+        }
+
+        private void prepareRunningServers(MulticastSocket ms){
+            try (DatagramSocket ds = new DatagramSocket();
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                 ObjectOutputStream oos = new ObjectOutputStream(baos)){
+
+                ds.setSoTimeout(3000);
+                ds.setBroadcast(true);
+
+                Request request = new Request(RequestEnum.PREPARE, Server.getServerData().getDatabaseVersion());
+                oos.writeUnshared(request);
+                oos.reset();
+
+                byte[] msgBytes = baos.toByteArray();
+                DatagramPacket dpSend = new DatagramPacket(
+                        msgBytes,
+                        msgBytes.length,
+                        InetAddress.getByName(IP_MULTICAST),
+                        PORT_MULTICAST
+                );
+                ds.send(dpSend);
+
+                while(true) {
+                    try {
+                        DatagramPacket dpRecDifusao = new DatagramPacket(new byte[MAX_BYTES], MAX_BYTES);
+                        ds.receive(dpRecDifusao);
+
+                        ByteArrayInputStream bais = new ByteArrayInputStream(dpRecDifusao.getData());
+                        ObjectInputStream ois = new ObjectInputStream(bais);
+                        Object objRec = ois.readUnshared();
+
+                        System.out.println("\nRECEIVED: " + objRec);
+
+                        if (objRec instanceof Response){
+                            // TODO: check if all servers sent response
+                        }
+                    } catch (SocketTimeoutException e) {
+                        // when datagramsocket times out
+                        break;
+                    }
+                }
+
+                request = new Request(RequestEnum.COMMIT, Server.getServerData().getDatabaseVersion());
+                oos.writeUnshared(request);
+                oos.reset();
+
+                msgBytes = baos.toByteArray();
+                dpSend = new DatagramPacket(
+                        msgBytes,
+                        msgBytes.length,
+                        InetAddress.getByName(IP_MULTICAST),
+                        PORT_MULTICAST
+                );
+                ds.send(dpSend);
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
+            }catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         }
     }
