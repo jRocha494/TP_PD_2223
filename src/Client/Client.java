@@ -176,8 +176,19 @@ public class Client {
     }
 
     public static Response makeShowVisible(int selectedShow) {
-        Request request = new Request(RequestEnum.REQUEST_PAY_BOOKING, selectedShow);
-        return sendRequest(request);    }
+        Request request = new Request(RequestEnum.REQUEST_MAKE_SHOW_VISIBLE, selectedShow);
+        return sendRequest(request);
+    }
+
+    public static Response deleteShow(int selectedShow) {
+        Request request = new Request(RequestEnum.REQUEST_DELETE_SHOW, selectedShow);
+        return sendRequest(request);
+    }
+
+    public static Response logout() {
+        Request request = new Request(RequestEnum.REQUEST_LOGOUT, currentUser.getId());
+        return sendRequest(request);
+    }
 
     public static Response sendRequest(Request request){
         try{

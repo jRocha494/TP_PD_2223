@@ -58,15 +58,6 @@ public class ConnDB
         statement.close();
     }
 
-    public void deleteUser(int id) throws SQLException
-    {
-        Statement statement = dbConn.createStatement();
-
-        String sqlQuery = "DELETE FROM users WHERE id=" + id;
-        statement.executeUpdate(sqlQuery);
-        statement.close();
-    }
-
     public void createUser(String name, String username, String password) throws SQLException {
         Statement statement = dbConn.createStatement();
 
@@ -97,7 +88,8 @@ public class ConnDB
 
     public User authenticateUser(String username, String password) throws SQLException {
         String sqlQuery = "SELECT * FROM utilizador " +
-                "WHERE username = '" + username +
+                "WHERE autenticado = 0" +
+                " AND username = '" + username +
                 "' AND password = '" + password + "';";
 
         try(
@@ -125,26 +117,6 @@ public class ConnDB
             e.printStackTrace();
             throw e;
         }
-    }
-
-    public void readAuthenticatedUsers() throws SQLException {
-        Statement statement = dbConn.createStatement();
-
-        String sqlQuery = "SELECT id, nome, username, password FROM utilizador WHERE autenticado = 1";
-
-        ResultSet resultSet = statement.executeQuery(sqlQuery);
-
-        while(resultSet.next())
-        {
-            int id = resultSet.getInt("id");
-            String name = resultSet.getString("nome");
-            String username = resultSet.getString("username");
-            String password = resultSet.getString("password");
-            System.out.println("[" + id + "] " + name + " (" + username + ")" + password);
-        }
-
-        resultSet.close();
-        statement.close();
     }
 
     private void createAdmin() throws SQLException {
@@ -277,6 +249,32 @@ public class ConnDB
         return freeSeatsList;
     }
 
+    private List<Seat> readShowOccupiedSeats(int showId) throws SQLException {
+        List<Seat> occupiedSeatList = new ArrayList<>();
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "SELECT * FROM lugar WHERE espetaculo_id = " + showId + " AND id in " +
+                "(SELECT id_lugar FROM reserva_lugar WHERE id_reserva in (SELECT id FROM reserva WHERE pago = 1))";
+
+        ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+        while(resultSet.next())
+        {
+            Seat newSeat = new Seat(resultSet.getInt("id"),
+                    resultSet.getString("fila"),
+                    resultSet.getString("assento"),
+                    resultSet.getFloat("preco"),
+                    resultSet.getInt("espetaculo_id")
+            );
+            occupiedSeatList.add(newSeat);
+        }
+
+        resultSet.close();
+        statement.close();
+
+        return occupiedSeatList;
+    }
+
     public List<Seat> readShowSeats(int showId) throws SQLException {
         List<Seat> seatList = new ArrayList<>();
         Statement statement = dbConn.createStatement();
@@ -398,32 +396,33 @@ public class ConnDB
         return booking;
     }
 
-    public Booking deleteBooking (int bookingId, int userId) throws SQLException{
-        Booking booking = null;
+    public void deleteBooking (int bookingId, int userId) throws SQLException{
         Statement statement = dbConn.createStatement();
 
         String sqlQuery = "DELETE FROM reserva WHERE pago = 0 AND id_utilizador = " + userId + " AND id = " + bookingId;
-        ResultSet resultSet = statement.executeQuery(sqlQuery);
+        statement.executeQuery(sqlQuery);
 
-        while (resultSet.next()) {
+        while (statement.executeUpdate(sqlQuery) > 0) {
             deleteBookingSeats(bookingId);
-            booking = new Booking(resultSet.getInt("id"),
-                    resultSet.getString("data_hora"),
-                    resultSet.getInt("pago"),
-                    resultSet.getInt("id_utilizador"),
-                    resultSet.getInt("id_espetaculo"));
         }
 
-        resultSet.close();
         statement.close();
-        return booking;
     }
 
     private void deleteBookingSeats (int bookingId) throws SQLException{
         Statement statement = dbConn.createStatement();
 
         String sqlQuery = "DELETE FROM reserva_lugar WHERE id_reserva = " + bookingId;
-        statement.executeQuery(sqlQuery);
+        statement.executeUpdate(sqlQuery);
+
+        statement.close();
+    }
+
+    private void deleteShowSeats (int showId) throws SQLException{
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "DELETE FROM lugar WHERE espetaculo_id = " + showId;
+        statement.executeUpdate(sqlQuery);
 
         statement.close();
     }
@@ -437,6 +436,8 @@ public class ConnDB
         if(statement.executeUpdate(sqlQuery) > 0)
         {
             booking = readUserBooking(bookingId, userId);
+        }else {
+            deleteBooking(bookingId, userId);
         }
 
         statement.close();
@@ -447,7 +448,34 @@ public class ConnDB
         Show show = null;
         Statement statement = dbConn.createStatement();
 
-        String sqlQuery = "UPDATE espetaculo SET pago = 1 WHERE id = " + selectedShow;
+        String sqlQuery = "UPDATE espetaculo SET visivel = 1 WHERE id = " + selectedShow;
+        statement.executeUpdate(sqlQuery);
+
+        statement.close();
+    }
+
+    public void deleteShow (int selectedShow) throws SQLException{
+        if(!readShowOccupiedSeats(selectedShow).isEmpty())
+            throw new SQLException();
+
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "DELETE FROM espetaculo WHERE id = " + selectedShow;
+
+        int conta = statement.executeUpdate(sqlQuery);
+        //if (statement.executeUpdate(sqlQuery) > 0) {
+        if (conta > 0) {
+            deleteShowSeats(selectedShow);
+        }
+
+        statement.close();
+    }
+
+    public void logout(int userId) throws SQLException {
+        Statement statement = dbConn.createStatement();
+
+        String sqlQuery = "UPDATE utilizador SET autenticado = 0 WHERE id = " + userId;
+        statement.executeUpdate(sqlQuery);
 
         statement.close();
     }

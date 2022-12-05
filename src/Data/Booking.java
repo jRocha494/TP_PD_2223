@@ -45,7 +45,7 @@ public class Booking implements Serializable {
                 '}';
     }
 
-    public static String fullDetails(Show show, List<Seat> seatList){
+    public static String fullDetails(Show show, List<Seat> seatList, boolean withPrice){
         float finalPrice = 0;
         String info = "Booking information:\n\tShow: " + show.toString() + "\n\tSelected Seats:\n";
 
@@ -55,7 +55,8 @@ public class Booking implements Serializable {
             finalPrice += seat.getPrice();
         }
 
-        info += "\tFinal Price: " + finalPrice + "\n";
+        if(withPrice)
+            info += "\tFinal Price: " + finalPrice + "\n";
 
         return info;
     }

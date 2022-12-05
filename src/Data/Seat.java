@@ -23,7 +23,9 @@ public class Seat implements Comparable<Seat>, Serializable {
     @Override
     public String toString() {
         return "Seat{" +
-                "seat='" + seat + '\'' +
+                "id=" + id +
+                ", row='" + row + '\'' +
+                ", seat='" + seat + '\'' +
                 ", price=" + price +
                 '}';
     }

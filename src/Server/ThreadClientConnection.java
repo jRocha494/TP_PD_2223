@@ -163,6 +163,12 @@ public class ThreadClientConnection extends Thread{
                         case REQUEST_MAKE_SHOW_VISIBLE -> {
                             response = Server.makeShowVisible((Integer) msgRec.getRequestData());
                         }
+                        case REQUEST_DELETE_SHOW -> {
+                            response = Server.deleteShow((Integer) msgRec.getRequestData());
+                        }
+                        case REQUEST_LOGOUT -> {
+                            response = Server.logout((Integer) msgRec.getRequestData());
+                        }
                     }
                     if (response != null){
                         if (response.getResponseMessage().getCode() == 200) {

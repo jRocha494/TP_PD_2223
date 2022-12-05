@@ -17,7 +17,9 @@ public enum RequestEnum implements Serializable {
     REQUEST_CONFIRM_BOOKING,
     REQUEST_DELETE_BOOKING,
     REQUEST_PAY_BOOKING,
-    REQUEST_MAKE_SHOW_VISIBLE;
+    REQUEST_MAKE_SHOW_VISIBLE,
+    REQUEST_DELETE_SHOW,
+    REQUEST_LOGOUT;
 
     @Serial
     private static final long serialVersionUID = 1L;

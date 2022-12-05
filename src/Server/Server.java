@@ -56,7 +56,7 @@ public class Server {
             MulticastSocket ms = new MulticastSocket(PORT_MULTICAST);
             InetAddress ipGroup = InetAddress.getByName(IP_MULTICAST);
             SocketAddress sa = new InetSocketAddress(ipGroup, PORT_MULTICAST);
-            NetworkInterface ni = NetworkInterface.getByName("wlan1");
+            NetworkInterface ni = NetworkInterface.getByName("eth2");
             ms.joinGroup(sa, ni);
 
             // set timeout to receive heartbeats to 30 seconds
@@ -289,10 +289,8 @@ public class Server {
         try {
             int bookingId = (int) data.get(0);
             int userId = (int) data.get(1);
-            Booking booking = connDB.deleteBooking(bookingId, userId);
-            if(booking == null)
-                return new Response(ResponseMessageEnum.NOT_FOUND, null);
-            return new Response(ResponseMessageEnum.SUCCESS, booking);
+            connDB.deleteBooking(bookingId, userId);
+            return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
             return new Response(ResponseMessageEnum.NOT_FOUND, null);
         }
@@ -314,6 +312,24 @@ public class Server {
     public static Response makeShowVisible(int selectedShow) {
         try {
             connDB.makeShowVisible(selectedShow);
+            return new Response(ResponseMessageEnum.SUCCESS, null);
+        } catch (SQLException e) {
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+        }
+    }
+
+    public static Response deleteShow(int selectedShow) {
+        try {
+            connDB.deleteShow(selectedShow);
+            return new Response(ResponseMessageEnum.SUCCESS, null);
+        } catch (SQLException e) {
+            return new Response(ResponseMessageEnum.NOT_FOUND, null);
+        }
+    }
+
+    public static Response logout(int userId) {
+        try {
+            connDB.logout(userId);
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
             return new Response(ResponseMessageEnum.NOT_FOUND, null);
