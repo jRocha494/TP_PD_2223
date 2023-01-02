@@ -1,6 +1,7 @@
 package Server;
 
 import Data.*;
+import Server.rmi_service.rmi.RemoteObservable;
 import rmi_service.resources.RmiConstants;
 import utils.Request;
 import utils.RequestEnum;
@@ -10,7 +11,6 @@ import utils.ResponseMessageEnum;
 
 import java.io.*;
 import java.net.*;
-import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -123,7 +123,7 @@ public class Server {
             logger.log(Level.INFO, "RMI service <{0}> created and running.", RmiConstants.RMI_SERVICE_NAME+port);
 
             remoteObservable = new RemoteObservable();
-            r.rebind(RmiConstants.RMI_SERVICE_NAME+port, remoteObservable);
+            r.rebind(RmiConstants.RMI_SERVICE_NAME + port, remoteObservable);
             logger.log(Level.INFO, "RMI service <{0}> registered.", RmiConstants.RMI_SERVICE_NAME+port);
         } catch(RemoteException e) {
             logger.log(Level.SEVERE, "RMI remote exception. -> {0}", e.toString());

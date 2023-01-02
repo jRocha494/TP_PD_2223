@@ -1,7 +1,7 @@
 package rmi_service;
 
 import rmi_service.resources.RmiConstants;
-import rmi_service.rmi.RemoteObservableInterface;
+import Server.rmi_service.rmi.RemoteObservableInterface;
 import rmi_service.rmi.RemoteObserver;
 
 import java.rmi.NoSuchObjectException;

@@ -1,4 +1,6 @@
-package rmi_service.rmi;
+package Server.rmi_service.rmi;
+
+import rmi_service.rmi.RemoteObserverInterface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
