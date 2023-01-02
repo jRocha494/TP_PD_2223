@@ -114,7 +114,12 @@ public class Server {
 
     private void registerRemoteService(String port) {
         try {
-            Registry r = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            Registry r;
+            try {
+                r = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            }catch(RemoteException e) {
+                r = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+            }
             logger.log(Level.INFO, "RMI service <{0}> created and running.", RmiConstants.RMI_SERVICE_NAME+port);
 
             remoteObservable = new RemoteObservable();
