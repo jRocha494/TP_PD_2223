@@ -1,6 +1,7 @@
 package Server;
 
 import Data.*;
+import rmi_service.resources.RmiConstants;
 import utils.Request;
 import utils.RequestEnum;
 import utils.Response;
@@ -9,11 +10,19 @@ import utils.ResponseMessageEnum;
 
 import java.io.*;
 import java.net.*;
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import static Data.Utils.*;
 
@@ -24,6 +33,8 @@ public class Server {
     private ServerPersistentData serverPersistentData;
     private ArrayList<Thread> serverThreadList;
     private String databaseLocation;
+    public static final Logger logger = Logger.getLogger(Server.class.getName());
+    private RemoteObservable remoteObservable = null;
 
     public Server(int port, String ip, String databaseLocation) {
         this.databaseLocation = databaseLocation;
@@ -50,6 +61,7 @@ public class Server {
         }
 
         try {
+            setupLogger();
             System.out.println("IP: " + InetAddress.getLocalHost());
             System.out.println("PORT: " + args[0]);
             Server server = new Server(
@@ -76,6 +88,8 @@ public class Server {
             }
             connDB = new ConnDB(server.databaseLocation);
 
+            server.registerRemoteService(String.valueOf(serverData.getPort()));
+
             ThreadServerHeartbeat tsh = new ThreadServerHeartbeat(ms);
             server.serverThreadList.add(tsh);
 
@@ -96,6 +110,32 @@ public class Server {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void registerRemoteService(String port) {
+        try {
+            Registry r = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            logger.log(Level.INFO, "RMI service <{0}> created and running.", RmiConstants.RMI_SERVICE_NAME+port);
+
+            remoteObservable = new RemoteObservable();
+            r.rebind(RmiConstants.RMI_SERVICE_NAME+port, remoteObservable);
+            logger.log(Level.INFO, "RMI service <{0}> registered.", RmiConstants.RMI_SERVICE_NAME+port);
+        } catch(RemoteException e) {
+            logger.log(Level.SEVERE, "RMI remote exception. -> {0}", e.toString());
+        }
+    }
+
+    private static void setupLogger(){
+        // suppress the logging output to the file
+        logger.setUseParentHandlers(false);
+
+        logger.setLevel(Level.INFO);
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+
+        // create a TXT formatter
+        SimpleFormatter formatterTxt = new SimpleFormatter();
+        consoleHandler.setFormatter(formatterTxt);
+        logger.addHandler(consoleHandler);
     }
 
     private void updateDatabase() throws IOException, ClassNotFoundException {

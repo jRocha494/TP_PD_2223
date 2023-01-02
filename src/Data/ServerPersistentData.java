@@ -42,6 +42,20 @@ public class ServerPersistentData {
         return new ArrayList<>(instance.runningServers.values());
     }
 
+    public String getServersListString(){
+        if (instance == null)
+            instance = new ServerPersistentData();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        runningServers.forEach((key, value) -> {
+            stringBuilder.append("----------\n");
+            stringBuilder.append(value.toString());
+            stringBuilder.append("\n");
+        });
+        stringBuilder.append("----------");
+        return stringBuilder.toString();
+    }
+
     public static <K, V extends Comparable<V>> Map<K, V> valueSort(final Map<K, V> map){
         Comparator<K> valueComparator = (k1, k2) -> {
             int comp = map.get(k1).compareTo(
