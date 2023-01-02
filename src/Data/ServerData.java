@@ -80,15 +80,9 @@ public class ServerData implements Serializable, Comparable<ServerData> {
 
     @Override
     public String toString() {
-        return "ServerData{" +
-                "nmrConnections=" + nmrConnections +
-                ", port=" + port +
-                ", portDatabaseUpdate=" + portDatabaseUpdate +
-                ", ip='" + ip + '\'' +
-                ", databaseVersion=" + databaseVersion +
-                ", availability=" + availability +
-                ", lastSentHeartbeat=" + lastSentHeartbeat +
-                '}';
+        return "Server [" + ip + ":" + port + "]\n" +
+                "\t-> connections: " + nmrConnections + "\n" +
+                "\t-> database version: " + databaseVersion + "\n" +
+                "\t-> availability: " + availability;
     }
-
 }
