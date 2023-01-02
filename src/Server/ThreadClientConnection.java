@@ -1,9 +1,8 @@
 package Server;
 
-import Data.ServerData;
 import Data.ServerPersistentData;
 import Data.User;
-import rmi_service.rmi.RemoteObservableInterface;
+import Server.rmi_service.rmi.RemoteObservable;
 import utils.Request;
 import utils.RequestEnum;
 import utils.Response;

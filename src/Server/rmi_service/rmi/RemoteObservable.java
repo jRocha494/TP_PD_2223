@@ -1,9 +1,9 @@
-package Server;
+package Server.rmi_service.rmi;
 
 import Data.ServerData;
 import Data.ServerPersistentData;
 import Data.User;
-import rmi_service.rmi.RemoteObservableInterface;
+import Server.rmi_service.rmi.RemoteObservableInterface;
 import rmi_service.rmi.RemoteObserverInterface;
 
 import java.rmi.RemoteException;
@@ -18,17 +18,17 @@ import static Server.Server.logger;
 public class RemoteObservable extends UnicastRemoteObject implements RemoteObservableInterface {
     private final Set<RemoteObserverInterface> observersSet = new HashSet<>();
 
-    protected RemoteObservable() throws RemoteException {
+    public RemoteObservable() throws RemoteException {
     }
 
-    public void notifyClientAcception(ServerData serverData){
+    public synchronized void notifyClientAcception(ServerData serverData){
         notifyObservers(
                 "Server [" + serverData.getIp() + ":" + serverData.getPort() +
                         "] accepted a connection from a client."
         );
     }
 
-    public void notifyClientConnectionAttempt(ServerData serverData) {
+    public synchronized void notifyClientConnectionAttempt(ServerData serverData) {
         notifyObservers(
                 "Server [" + serverData.getIp() + ":" + serverData.getPort() +
                         "] received a connection attempt from a client."
@@ -42,7 +42,7 @@ public class RemoteObservable extends UnicastRemoteObject implements RemoteObser
         );
     }
 
-    public void notifyClientLogout(ServerData serverData, User user) {
+    public synchronized void notifyClientLogout(ServerData serverData, User user) {
         notifyObservers(
                 "User " + user.getUsername() + " logged out of Server [" +
                         serverData.getIp() + ":" + serverData.getPort() + "]"
