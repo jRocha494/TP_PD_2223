@@ -72,7 +72,7 @@ public class Server {
             MulticastSocket ms = new MulticastSocket(PORT_MULTICAST);
             InetAddress ipGroup = InetAddress.getByName(IP_MULTICAST);
             SocketAddress sa = new InetSocketAddress(ipGroup, PORT_MULTICAST);
-            NetworkInterface ni = NetworkInterface.getByName("eth2");
+            NetworkInterface ni = NetworkInterface.getByName("wlan1");
             ms.joinGroup(sa, ni);
 
             // set timeout to receive heartbeats to 30 seconds
@@ -93,7 +93,7 @@ public class Server {
             ThreadServerHeartbeat tsh = new ThreadServerHeartbeat(ms);
             server.serverThreadList.add(tsh);
 
-            ThreadClientConnection tcn = new ThreadClientConnection(Integer.parseInt(args[0]), ms);
+            ThreadClientConnection tcn = new ThreadClientConnection(Integer.parseInt(args[0]), ms, server.remoteObservable);
             server.serverThreadList.add(tcn);
 
             // waits threads to conclude execution
@@ -371,9 +371,9 @@ public class Server {
         }
     }
 
-    public static Response logout(int userId) {
+    public static Response logout(User user) {
         try {
-            connDB.logout(userId);
+            connDB.logout(user.getId());
             return new Response(ResponseMessageEnum.SUCCESS, null);
         } catch (SQLException e) {
             return new Response(ResponseMessageEnum.ERROR_OCCURRED, null);

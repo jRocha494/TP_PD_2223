@@ -1,7 +1,9 @@
 package Server;
 
+import Data.ServerData;
 import Data.ServerPersistentData;
 import Data.User;
+import rmi_service.rmi.RemoteObservableInterface;
 import utils.Request;
 import utils.RequestEnum;
 import utils.Response;
@@ -16,17 +18,19 @@ import static Data.Utils.*;
 
 public class ThreadClientConnection extends Thread{
     static ServerPersistentData serverPersistentData = ServerPersistentData.getInstance();
+    RemoteObservable remoteObservable;
     int port;
     MulticastSocket ms;
-    public ThreadClientConnection(int port, MulticastSocket ms) {
+    public ThreadClientConnection(int port, MulticastSocket ms, RemoteObservable remoteObservable) {
         this.port = port;
         this.ms = ms;
+        this.remoteObservable = remoteObservable;
         this.start();
     }
 
     @Override
     public void run(){
-        AcceptClients ac = new AcceptClients(port, ms);
+        AcceptClients ac = new AcceptClients(port, ms, remoteObservable);
 
         try (DatagramSocket ds = new DatagramSocket(port)){
             while (!Thread.currentThread().isInterrupted()){
@@ -38,6 +42,7 @@ public class ThreadClientConnection extends Thread{
                 Request msgRec = (Request) ois.readObject();
 
                 if (msgRec.getRequestMessage().equals(RequestEnum.MSG_CONNECT_SERVER)){
+                    remoteObservable.notifyClientConnectionAttempt(Server.getServerData());
                     Response msgResp = new Response(ResponseMessageEnum.SUCCESS, ServerPersistentData.getInstance().getServersList());
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -77,10 +82,13 @@ public class ThreadClientConnection extends Thread{
         int port;
         MulticastSocket ms;
         ArrayList<Thread> clientCommunicationThread;
-        public AcceptClients(int port, MulticastSocket ms) {
+        RemoteObservable remoteObservable;
+
+        public AcceptClients(int port, MulticastSocket ms, RemoteObservable remoteObservable) {
             this.port = port;
             this.ms = ms;
             this.clientCommunicationThread = new ArrayList<>();
+            this.remoteObservable = remoteObservable;
             this.start();
         }
 
@@ -89,9 +97,10 @@ public class ThreadClientConnection extends Thread{
             try (ServerSocket ss = new ServerSocket(port);){
                 while (!Thread.currentThread().isInterrupted()) {
                     Socket socket = ss.accept();
-                    CommunicateWithClient cwc = new CommunicateWithClient(socket, port, ms);
+                    CommunicateWithClient cwc = new CommunicateWithClient(socket, port, ms, remoteObservable);
                     clientCommunicationThread.add(cwc);
                     Server.getServerData().incrementNmrConnections();
+                    remoteObservable.notifyClientAcception(Server.getServerData());
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -112,10 +121,12 @@ public class ThreadClientConnection extends Thread{
         Socket socket;
         MulticastSocket ms;
         int port;
-        public CommunicateWithClient(Socket socket, int port, MulticastSocket ms) {
+        RemoteObservable remoteObservable;
+        public CommunicateWithClient(Socket socket, int port, MulticastSocket ms, RemoteObservable remoteObservable) {
             this.port = port;
             this.socket = socket;
             this.ms = ms;
+            this.remoteObservable = remoteObservable;
             this.start();
         }
 
@@ -126,11 +137,13 @@ public class ThreadClientConnection extends Thread{
 
                 while (!Thread.currentThread().isInterrupted()) {
                     Request msgRec = (Request) ois.readObject();
-                    //TODO: read commands from client and send responses
                     Response response = null;
                     switch (msgRec.getRequestMessage()){
                         case REQUEST_AUTHENTICATE_USER -> {
-                            response = Server.authenticateUser((User) msgRec.getRequestData());
+                            User user = (User) msgRec.getRequestData();
+                            response = Server.authenticateUser(user);
+                            if (response.getResponseMessage().getCode() == 200)
+                                remoteObservable.notifyClientAuthentication(Server.getServerData(), user);
                         }
                         case REQUEST_REGISTER_USER -> {
                             response = Server.registerUser((User) msgRec.getRequestData());
@@ -169,7 +182,10 @@ public class ThreadClientConnection extends Thread{
                             response = Server.deleteShow((Integer) msgRec.getRequestData());
                         }
                         case REQUEST_LOGOUT -> {
-                            response = Server.logout((Integer) msgRec.getRequestData());
+                            User user = (User) msgRec.getRequestData();
+                            response = Server.logout(user);
+                            if (response.getResponseMessage().getCode() == 200)
+                                remoteObservable.notifyClientLogout(Server.getServerData(), user);
                         }
                     }
                     if (response != null){
