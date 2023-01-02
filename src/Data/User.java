@@ -1,11 +1,11 @@
-package Models;
+package Data;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.io.Serial;
+import java.io.Serializable;
 
-public class User {
+public class User implements Serializable {
+    @Serial
+    static final long serialVersionUID = 1L;
     int id;
     String name;
     String username;
