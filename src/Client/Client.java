@@ -185,7 +185,7 @@ public class Client {
     }
 
     public static Response logout() {
-        Request request = new Request(RequestEnum.REQUEST_LOGOUT, currentUser.getId());
+        Request request = new Request(RequestEnum.REQUEST_LOGOUT, currentUser);
         return sendRequest(request);
     }
 

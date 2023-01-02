@@ -38,6 +38,8 @@ public class RmiObserver {
             Registry r = LocateRegistry.getRegistry(null, Registry.REGISTRY_PORT);
             remoteObservable = (RemoteObservableInterface) r.lookup(registryBindName);
 
+            remoteObservable.addObserver(remoteObserver);
+
             while (!cmd.equalsIgnoreCase("s")) {
                 System.out.println("OPTIONS:");
                 System.out.println("\t'list' -> List all running servers");
@@ -50,9 +52,9 @@ public class RmiObserver {
             }
 
         } catch (RemoteException e) {
-            logger.severe("Error connecting to registry");
+            logger.log(Level.SEVERE,"Error connecting to registry. -> {0}", e.toString());
         } catch (NotBoundException e) {
-            logger.severe("Error connecting to remote service");
+            logger.log(Level.SEVERE, "Error connecting to remote service. There might be no servers running on the received port. -> {0}", e.toString());
         } finally {
         if (remoteObservable != null) {
             try {
