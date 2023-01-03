@@ -31,23 +31,26 @@ public class RmiObserver {
         String cmd = "";
         RemoteObserver remoteObserver = null;
         RemoteObservableInterface remoteObservable = null;
-
         try {
             remoteObserver = new RemoteObserver();
 
             Registry r = LocateRegistry.getRegistry(null, Registry.REGISTRY_PORT);
             remoteObservable = (RemoteObservableInterface) r.lookup(registryBindName);
 
-            remoteObservable.addObserver(remoteObserver);
-
             while (!cmd.equalsIgnoreCase("s")) {
                 System.out.println("OPTIONS:");
-                System.out.println("\t'list' -> List all running servers");
-                System.out.println("\t'stop' -> Stop the program");
+                System.out.println("\t'l' -> To (l)ist all running servers");
+                System.out.println("\t'r' -> To (r)egister listener to receive notifications");
+                System.out.println("\t'd' -> To (d)elete listener to receive notifications");
+                System.out.println("\t's' -> To (s)top the program");
 
                 cmd = scanner.nextLine();
                 if (cmd.equalsIgnoreCase("l")) {
                     System.out.println(remoteObservable.getServersList());
+                }else if (cmd.equalsIgnoreCase("r")) {
+                    remoteObservable.addObserver(remoteObserver);
+                }else if (cmd.equalsIgnoreCase("d")) {
+                    remoteObservable.removeObserver(remoteObserver);
                 }
             }
 
