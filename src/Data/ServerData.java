@@ -83,6 +83,7 @@ public class ServerData implements Serializable, Comparable<ServerData> {
         return "Server [" + ip + ":" + port + "]\n" +
                 "\t-> connections: " + nmrConnections + "\n" +
                 "\t-> database version: " + databaseVersion + "\n" +
-                "\t-> availability: " + availability;
+                "\t-> availability: " + availability + "\n" +
+                "\t-> last sent heartbeat: " + ((System.currentTimeMillis() - lastSentHeartbeat)/1000) + " seconds ago";
     }
 }
